@@ -1,0 +1,35 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>arm_control_pkg</name>
+  <version>0.0.0</version>
+  <description>Package for managing robot arm control commands and state.</description>
+  <maintainer email="your_email@example.com">Your Name</maintainer>
+  <license>Apache-2.0</license>
+
+  <buildtool_depend>ament_cmake</buildtool_depend>
+  <buildtool_depend>ament_cmake_python</buildtool_depend>
+  <buildtool_depend>ament_cmake_ros</buildtool_depend> 
+  <buildtool_depend>rosidl_default_generators</buildtool_depend>
+
+  <depend>rclpy</depend>
+  <depend>std_msgs</depend>
+  <depend>robot_interfaces</depend> <!-- <<<< 新增这一行 -->
+
+  <exec_depend>rosidl_default_runtime</exec_depend>
+
+  <!-- This tag is for packages that define their own interfaces.
+       Since arm_control_pkg no longer defines interfaces, this line could be removed,
+       but it doesn't hurt to keep it if it ever needs to define its own in the future.
+  <member_of_group>rosidl_interface_packages</member_of_group>
+  -->
+
+  <test_depend>ament_copyright</test_depend>
+  <test_depend>ament_flake8</test_depend>
+  <test_depend>ament_pep257</test_depend>
+  <test_depend>python3-pytest</test_depend>
+
+  <export>
+    <build_type>ament_python</build_type>
+  </export>
+</package>

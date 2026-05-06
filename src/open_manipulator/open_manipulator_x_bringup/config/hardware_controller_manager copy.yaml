@@ -1,0 +1,88 @@
+controller_manager:
+  ros__parameters:
+    use_sim_time: False
+    update_rate: 200 # Hz
+    joint_state_broadcaster:
+      type: joint_state_broadcaster/JointStateBroadcaster
+
+    arm_controller:
+      type: joint_trajectory_controller/JointTrajectoryController
+    
+    hand_controller:
+      type: joint_trajectory_controller/JointTrajectoryController
+
+hand_controller:
+  ros__parameters:
+    allowed_execution_duration_threshold: 0.1 
+    joints:
+
+       - hand1
+       - hand0
+       - hand2
+       - hand3
+       - hand5
+       - hand4
+       - hand6
+       - hand7
+       - hand9
+       - hand8
+       - hand10
+       - hand11
+       - hand12
+       - hand13
+       - hand14
+       - hand15
+
+
+
+    interface_name: position
+
+    command_interfaces:
+      - position
+
+    state_interfaces:
+      - position
+      - velocity
+
+    state_publish_rate: 50.0
+    action_monitor_rate: 100.0
+
+    allow_partial_joints_goal: false
+    open_loop_control: false
+    allow_integration_in_goal_trajectories: true
+    constraints:
+      stopped_velocity_tolerance: 0.1
+      goal_time: 0.1
+    allowed_execution_duration_threshold: 0.03  # 时间误差容限
+
+arm_controller:
+  ros__parameters:
+    allowed_execution_duration_threshold: 0.1 
+    joints:
+        # - joint1
+        # - joint2
+        # - joint3
+        - joint4
+        # - joint5
+
+
+    interface_name: position
+
+    command_interfaces:
+      - position
+
+    state_interfaces:
+      - position
+      - velocity
+
+    state_publish_rate: 50.0
+    action_monitor_rate: 100.0
+
+    allow_partial_joints_goal: false
+    open_loop_control: false
+    allow_integration_in_goal_trajectories: true
+    constraints:
+      stopped_velocity_tolerance: 0.1
+      goal_time: 0.1
+    allowed_execution_duration_threshold: 0.03  # 时间误差容限
+    

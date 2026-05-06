@@ -1,0 +1,10 @@
+Camera Intrinsic Calibration Report - Sat Aug  9 23:23:12 2025
+==============================
+
+Camera Matrix (fx, fy, cx, cy):
+516.6742 0.0000 311.9024
+0.0000 519.0564 235.5816
+0.0000 0.0000 1.0000
+
+Distortion Coefficients (k1, k2, p1, p2, k3):
+0.048675 -0.234582 -0.000231 -0.001049 0.258720

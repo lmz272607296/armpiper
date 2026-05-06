@@ -1,0 +1,45 @@
+<?xml version="1.0"?>
+<!-- OpenManipulator Chain -->
+<robot name="open_manipulator_x" xmlns:xacro="http://ros.org/wiki/xacro">
+  <xacro:arg name="prefix" default="" />
+  <xacro:arg name="use_sim" default="false" />
+  <xacro:arg name="use_fake_hardware" default="false" />
+  <xacro:arg name="fake_sensor_commands" default="false" />
+
+  <!-- 端口定义 -->
+  <xacro:arg name="arm_port_name" default="/dev/ttyarm" />
+  <xacro:arg name="hand_port_name" default="/dev/ttyhand" />
+
+  <!-- Import Rviz colors -->
+  <xacro:include filename="$(find open_manipulator_x_description)/gazebo/materials.xacro" />
+
+  <!-- Import all Gazebo-customization elements, including Gazebo colors -->
+  <xacro:include filename="$(find open_manipulator_x_description)/gazebo/open_manipulator_x.gazebo.xacro" />
+
+  <!-- Import URDF -->
+  <xacro:include filename="$(find open_manipulator_x_description)/urdf/open_manipulator_x.urdf.xacro" />
+
+  <xacro:include filename="$(find open_manipulator_x_description)/ros2_control/open_manipulator_x_system.ros2_control.xacro" />
+
+  <xacro:open_manipulator_x prefix="$(arg prefix)" />
+  <xacro:open_manipulator_x_gazebo prefix="$(arg prefix)" />
+  <xacro:open_manipulator_x_system
+    prefix="$(arg prefix)" use_sim="$(arg use_sim)"
+    use_fake_hardware="$(arg use_fake_hardware)"
+    fake_sensor_commands="$(arg fake_sensor_commands)"
+    arm_port_name="$(arg arm_port_name)"
+    hand_port_name="$(arg hand_port_name)"/>
+
+
+
+  <!-- World -->
+  <link name="world"/>
+
+  <!-- World fixed joint-->
+  <joint name="$(arg prefix)world_fixed" type="fixed">
+    <origin xyz="0 0 0" rpy="0 0 0"/>
+    <parent link="world"/>
+    <child link="$(arg prefix)link1"/>
+  </joint>
+
+</robot>
