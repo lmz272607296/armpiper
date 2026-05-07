@@ -1,0 +1,3 @@
+/home/lmz/armpiper/build/piper_msgs/rosidl_adapter/piper_msgs:msg/PiperStatusMsg.idl
+/home/lmz/armpiper/build/piper_msgs/rosidl_adapter/piper_msgs:msg/PosCmd.idl
+/home/lmz/armpiper/build/piper_msgs/rosidl_adapter/piper_msgs:srv/Enable.idl

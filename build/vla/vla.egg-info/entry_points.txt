@@ -1,0 +1,3 @@
+[console_scripts]
+test = vla.test:main
+

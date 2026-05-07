@@ -1,0 +1,1 @@
+/home/lmz/armpiper/build/piper_msgs/ament_cmake_python/piper_msgs/piper_msgs.egg-info/top_level.txt

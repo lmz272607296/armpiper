@@ -59,9 +59,9 @@ def generate_launch_description():
 
     declared_arguments.append(
         DeclareLaunchArgument(
-            'port_name',
-            default_value='/dev/ttyUSB0',
-            description='The port name to connect to hardware.'
+            'hand_port_name',
+            default_value='/dev/ttyhand',
+            description='The port name for the hand hardware.'
         )
     )
 
@@ -70,7 +70,7 @@ def generate_launch_description():
     use_sim = LaunchConfiguration('use_sim')
     use_fake_hardware = LaunchConfiguration('use_fake_hardware')
     fake_sensor_commands = LaunchConfiguration('fake_sensor_commands')
-    port_name = LaunchConfiguration('port_name')
+    hand_port_name = LaunchConfiguration('hand_port_name')
 
     urdf_file = Command(
         [
@@ -96,8 +96,8 @@ def generate_launch_description():
             'fake_sensor_commands:=',
             fake_sensor_commands,
             ' ',
-            'port_name:=',
-            port_name,
+            'hand_port_name:=',
+            hand_port_name,
         ]
     )
 
@@ -154,10 +154,10 @@ def generate_launch_description():
         output='screen',
     )
 
-    arm_controller_spawner = Node(
+    hand_controller_spawner = Node(
         package='controller_manager',
         executable='spawner',
-        arguments=['arm_controller'],
+        arguments=['hand_controller', '-c', '/controller_manager'],
         output='screen',
     )
 
@@ -169,11 +169,11 @@ def generate_launch_description():
         )
     )
 
-    delay_arm_controller_spawner_after_joint_state_broadcaster_spawner = \
+    delay_hand_controller_spawner_after_joint_state_broadcaster_spawner = \
         RegisterEventHandler(
             event_handler=OnProcessExit(
                 target_action=joint_state_broadcaster_spawner,
-                on_exit=[arm_controller_spawner],
+                on_exit=[hand_controller_spawner],
             )
         )
 
@@ -183,7 +183,7 @@ def generate_launch_description():
         robot_state_pub_node,
         joint_state_broadcaster_spawner,
         delay_rviz_after_joint_state_broadcaster_spawner,
-        delay_arm_controller_spawner_after_joint_state_broadcaster_spawner,
+        delay_hand_controller_spawner_after_joint_state_broadcaster_spawner,
 
     ]
 

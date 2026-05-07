@@ -1,0 +1,1 @@
+/home/lmz/armpiper/src/open_manipulator/open_manipulator_x_bringup/launch/single_hardware.py

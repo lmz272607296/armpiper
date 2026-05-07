@@ -1,0 +1,14 @@
+{
+	"backtraceGraph" : 
+	{
+		"commands" : [],
+		"files" : [],
+		"nodes" : []
+	},
+	"installers" : [],
+	"paths" : 
+	{
+		"build" : "piper_msgs__py",
+		"source" : "/home/lmz/armpiper/build/piper_msgs/piper_msgs__py"
+	}
+}

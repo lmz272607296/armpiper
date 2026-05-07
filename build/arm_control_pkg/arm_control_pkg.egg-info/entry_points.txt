@@ -1,0 +1,3 @@
+[console_scripts]
+arm_manager = arm_control_pkg.arm_control_manager_node:main
+

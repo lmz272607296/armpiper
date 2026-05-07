@@ -1,0 +1,14 @@
+{
+	"backtraceGraph" : 
+	{
+		"commands" : [],
+		"files" : [],
+		"nodes" : []
+	},
+	"installers" : [],
+	"paths" : 
+	{
+		"build" : "dynamixel_interfaces__py",
+		"source" : "/home/lmz/armpiper/build/dynamixel_interfaces/dynamixel_interfaces__py"
+	}
+}

@@ -31,7 +31,7 @@ def generate_launch_description():
             # Fallback to default
             port_to_use = '/dev/ttyUSB0'
 
-    port_name = LaunchConfiguration('port_name', default=port_to_use)
+    hand_port_name = LaunchConfiguration('hand_port_name', default=port_to_use)
     # ################################################################### #
     # #                  MODIFICATION END                               # #
     # ################################################################### #
@@ -58,9 +58,9 @@ def generate_launch_description():
             description='Start robot in Gazebo simulation.'),
 
         DeclareLaunchArgument(
-            'port_name',
+            'hand_port_name',
             default_value=port_to_use,
-            description='The port name to connect to hardware. Auto-detected from /dev/ttyUSB0 or /dev/ttyUSB1.'),
+            description='The port name for the hand hardware. Auto-detected from /dev/ttyUSB0 or /dev/ttyUSB1.'),
 
         IncludeLaunchDescription(
             PythonLaunchDescriptionSource([ThisLaunchFileDir(), '/base.launch.py']),
@@ -69,7 +69,7 @@ def generate_launch_description():
                 'prefix': prefix,
                 'use_fake_hardware': use_fake_hardware,
                 'use_sim': use_sim,
-                'port_name': port_name,
+                'hand_port_name': hand_port_name,
             }.items(),
         ),
     ])

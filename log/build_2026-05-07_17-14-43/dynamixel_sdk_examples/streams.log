@@ -1,0 +1,76 @@
+[0.015s] Invoking command in '/home/lmz/armpiper/build/dynamixel_sdk_examples': CMAKE_PREFIX_PATH=/home/lmz/armpiper/install/dynamixel_sdk_custom_interfaces:/home/lmz/armpiper/install/dynamixel_sdk:/home/lmz/armpiper/install/piper_with_gripper_moveit:/home/lmz/armpiper/install/piper_no_gripper_moveit:/home/lmz/armpiper/install/piper_mujoco:/home/lmz/armpiper/install/piper_msgs:/home/lmz/armpiper/install/piper_humble:/home/lmz/armpiper/install/piper_gazebo:/home/lmz/armpiper/install/piper_description:/home/lmz/armpiper/install/open_manipulator:/home/lmz/armpiper/install/open_manipulator_x_bringup:/home/lmz/armpiper/install/open_manipulator_x_description:/home/lmz/armpiper/install/dynamixel_sdk_examples:/home/lmz/armpiper/install/dynamixel_hardware_interface:/home/lmz/armpiper/install/dynamixel_interfaces:/home/lmz/armpiper/install/vla:/home/lmz/armpiper/install/interface:/home/lmz/armpiper/install/piper:/home/lmz/armpiper/install/leapsim:/home/lmz/armpiper/install/follow:/home/lmz/armpiper/install/arm_control_pkg:/opt/ros/humble LD_LIBRARY_PATH=/home/lmz/armpiper/install/dynamixel_sdk_custom_interfaces/lib:/home/lmz/armpiper/install/dynamixel_sdk/lib:/home/lmz/armpiper/install/piper_msgs/lib:/home/lmz/armpiper/install/dynamixel_hardware_interface/lib:/home/lmz/armpiper/install/dynamixel_interfaces/lib:/opt/ros/humble/opt/rviz_ogre_vendor/lib:/opt/ros/humble/lib/x86_64-linux-gnu:/opt/ros/humble/lib /usr/bin/cmake /home/lmz/armpiper/src/DynamixelSDK/ros/dynamixel_sdk_examples -DAMENT_CMAKE_SYMLINK_INSTALL=1 -DCMAKE_INSTALL_PREFIX=/home/lmz/armpiper/install/dynamixel_sdk_examples
+[0.074s] -- The C compiler identification is GNU 11.4.0
+[0.124s] -- The CXX compiler identification is GNU 11.4.0
+[0.130s] -- Detecting C compiler ABI info
+[0.190s] -- Detecting C compiler ABI info - done
+[0.197s] -- Check for working C compiler: /usr/bin/cc - skipped
+[0.197s] -- Detecting C compile features
+[0.198s] -- Detecting C compile features - done
+[0.201s] -- Detecting CXX compiler ABI info
+[0.286s] -- Detecting CXX compiler ABI info - done
+[0.292s] -- Check for working CXX compiler: /usr/bin/c++ - skipped
+[0.292s] -- Detecting CXX compile features
+[0.293s] -- Detecting CXX compile features - done
+[0.295s] -- Found ament_cmake: 1.3.11 (/opt/ros/humble/share/ament_cmake/cmake)
+[0.469s] -- Found Python3: /usr/bin/python3 (found version "3.10.12") found components: Interpreter 
+[0.551s] -- Override CMake install command with custom implementation using symlinks instead of copying resources
+[0.583s] -- Found dynamixel_sdk: 3.8.4 (/home/lmz/armpiper/install/dynamixel_sdk/share/dynamixel_sdk/cmake)
+[0.585s] -- Found dynamixel_sdk_custom_interfaces: 3.8.4 (/home/lmz/armpiper/install/dynamixel_sdk_custom_interfaces/share/dynamixel_sdk_custom_interfaces/cmake)
+[0.638s] -- Found rosidl_generator_c: 3.1.6 (/opt/ros/humble/share/rosidl_generator_c/cmake)
+[0.643s] -- Found rosidl_adapter: 3.1.6 (/opt/ros/humble/share/rosidl_adapter/cmake)
+[0.651s] -- Found rosidl_generator_cpp: 3.1.6 (/opt/ros/humble/share/rosidl_generator_cpp/cmake)
+[0.661s] -- Using all available rosidl_typesupport_c: rosidl_typesupport_fastrtps_c;rosidl_typesupport_introspection_c
+[0.675s] -- Using all available rosidl_typesupport_cpp: rosidl_typesupport_fastrtps_cpp;rosidl_typesupport_introspection_cpp
+[0.708s] -- Found rclcpp: 16.0.12 (/opt/ros/humble/share/rclcpp/cmake)
+[0.774s] -- Found rmw_implementation_cmake: 6.1.2 (/opt/ros/humble/share/rmw_implementation_cmake/cmake)
+[0.780s] -- Found rmw_cyclonedds_cpp: 1.3.4 (/opt/ros/humble/share/rmw_cyclonedds_cpp/cmake)
+[0.823s] -- Using RMW implementation 'rmw_cyclonedds_cpp' as default
+[0.836s] -- Looking for pthread.h
+[0.905s] -- Looking for pthread.h - found
+[0.905s] -- Performing Test CMAKE_HAVE_LIBC_PTHREAD
+[0.976s] -- Performing Test CMAKE_HAVE_LIBC_PTHREAD - Success
+[0.977s] -- Found Threads: TRUE  
+[1.025s] -- Found rclpy: 3.3.16 (/opt/ros/humble/share/rclpy/cmake)
+[1.028s] -- Found ament_lint_auto: 0.12.12 (/opt/ros/humble/share/ament_lint_auto/cmake)
+[1.116s] -- Added test 'copyright' to check source files copyright and LICENSE
+[1.117s] -- Added test 'cppcheck' to perform static code analysis on C / C++ code
+[1.117s] -- Configured cppcheck include dirs: /home/lmz/armpiper/src/DynamixelSDK/ros/dynamixel_sdk_examples/include
+[1.117s] -- Configured cppcheck exclude dirs and/or files: 
+[1.119s] -- Added test 'cpplint' to check C / C++ code against the Google style
+[1.119s] -- Configured cpplint exclude dirs and/or files: 
+[1.120s] -- Added test 'flake8' to check Python code syntax and style conventions
+[1.121s] -- Added test 'lint_cmake' to check CMake code style
+[1.121s] -- Added test 'pep257' to check Python code against some of the docstring style conventions in PEP 257
+[1.123s] -- Added test 'uncrustify' to check C / C++ code style
+[1.123s] -- Configured uncrustify additional arguments: 
+[1.124s] -- Added test 'xmllint' to check XML markup files
+[1.126s] -- Configuring done
+[1.136s] -- Generating done
+[1.140s] -- Build files have been written to: /home/lmz/armpiper/build/dynamixel_sdk_examples
+[1.148s] Invoked command in '/home/lmz/armpiper/build/dynamixel_sdk_examples' returned '0': CMAKE_PREFIX_PATH=/home/lmz/armpiper/install/dynamixel_sdk_custom_interfaces:/home/lmz/armpiper/install/dynamixel_sdk:/home/lmz/armpiper/install/piper_with_gripper_moveit:/home/lmz/armpiper/install/piper_no_gripper_moveit:/home/lmz/armpiper/install/piper_mujoco:/home/lmz/armpiper/install/piper_msgs:/home/lmz/armpiper/install/piper_humble:/home/lmz/armpiper/install/piper_gazebo:/home/lmz/armpiper/install/piper_description:/home/lmz/armpiper/install/open_manipulator:/home/lmz/armpiper/install/open_manipulator_x_bringup:/home/lmz/armpiper/install/open_manipulator_x_description:/home/lmz/armpiper/install/dynamixel_sdk_examples:/home/lmz/armpiper/install/dynamixel_hardware_interface:/home/lmz/armpiper/install/dynamixel_interfaces:/home/lmz/armpiper/install/vla:/home/lmz/armpiper/install/interface:/home/lmz/armpiper/install/piper:/home/lmz/armpiper/install/leapsim:/home/lmz/armpiper/install/follow:/home/lmz/armpiper/install/arm_control_pkg:/opt/ros/humble LD_LIBRARY_PATH=/home/lmz/armpiper/install/dynamixel_sdk_custom_interfaces/lib:/home/lmz/armpiper/install/dynamixel_sdk/lib:/home/lmz/armpiper/install/piper_msgs/lib:/home/lmz/armpiper/install/dynamixel_hardware_interface/lib:/home/lmz/armpiper/install/dynamixel_interfaces/lib:/opt/ros/humble/opt/rviz_ogre_vendor/lib:/opt/ros/humble/lib/x86_64-linux-gnu:/opt/ros/humble/lib /usr/bin/cmake /home/lmz/armpiper/src/DynamixelSDK/ros/dynamixel_sdk_examples -DAMENT_CMAKE_SYMLINK_INSTALL=1 -DCMAKE_INSTALL_PREFIX=/home/lmz/armpiper/install/dynamixel_sdk_examples
+[1.149s] Invoking command in '/home/lmz/armpiper/build/dynamixel_sdk_examples': CMAKE_PREFIX_PATH=/home/lmz/armpiper/install/dynamixel_sdk_custom_interfaces:/home/lmz/armpiper/install/dynamixel_sdk:/home/lmz/armpiper/install/piper_with_gripper_moveit:/home/lmz/armpiper/install/piper_no_gripper_moveit:/home/lmz/armpiper/install/piper_mujoco:/home/lmz/armpiper/install/piper_msgs:/home/lmz/armpiper/install/piper_humble:/home/lmz/armpiper/install/piper_gazebo:/home/lmz/armpiper/install/piper_description:/home/lmz/armpiper/install/open_manipulator:/home/lmz/armpiper/install/open_manipulator_x_bringup:/home/lmz/armpiper/install/open_manipulator_x_description:/home/lmz/armpiper/install/dynamixel_sdk_examples:/home/lmz/armpiper/install/dynamixel_hardware_interface:/home/lmz/armpiper/install/dynamixel_interfaces:/home/lmz/armpiper/install/vla:/home/lmz/armpiper/install/interface:/home/lmz/armpiper/install/piper:/home/lmz/armpiper/install/leapsim:/home/lmz/armpiper/install/follow:/home/lmz/armpiper/install/arm_control_pkg:/opt/ros/humble LD_LIBRARY_PATH=/home/lmz/armpiper/install/dynamixel_sdk_custom_interfaces/lib:/home/lmz/armpiper/install/dynamixel_sdk/lib:/home/lmz/armpiper/install/piper_msgs/lib:/home/lmz/armpiper/install/dynamixel_hardware_interface/lib:/home/lmz/armpiper/install/dynamixel_interfaces/lib:/opt/ros/humble/opt/rviz_ogre_vendor/lib:/opt/ros/humble/lib/x86_64-linux-gnu:/opt/ros/humble/lib /usr/bin/cmake --build /home/lmz/armpiper/build/dynamixel_sdk_examples -- -j16 -l16
+[1.199s] [ 50%] [32mBuilding CXX object CMakeFiles/read_write_node.dir/src/read_write_node.cpp.o[0m
+[7.745s] [100%] [32m[1mLinking CXX executable read_write_node[0m
+[8.062s] [100%] Built target read_write_node
+[8.077s] Invoked command in '/home/lmz/armpiper/build/dynamixel_sdk_examples' returned '0': CMAKE_PREFIX_PATH=/home/lmz/armpiper/install/dynamixel_sdk_custom_interfaces:/home/lmz/armpiper/install/dynamixel_sdk:/home/lmz/armpiper/install/piper_with_gripper_moveit:/home/lmz/armpiper/install/piper_no_gripper_moveit:/home/lmz/armpiper/install/piper_mujoco:/home/lmz/armpiper/install/piper_msgs:/home/lmz/armpiper/install/piper_humble:/home/lmz/armpiper/install/piper_gazebo:/home/lmz/armpiper/install/piper_description:/home/lmz/armpiper/install/open_manipulator:/home/lmz/armpiper/install/open_manipulator_x_bringup:/home/lmz/armpiper/install/open_manipulator_x_description:/home/lmz/armpiper/install/dynamixel_sdk_examples:/home/lmz/armpiper/install/dynamixel_hardware_interface:/home/lmz/armpiper/install/dynamixel_interfaces:/home/lmz/armpiper/install/vla:/home/lmz/armpiper/install/interface:/home/lmz/armpiper/install/piper:/home/lmz/armpiper/install/leapsim:/home/lmz/armpiper/install/follow:/home/lmz/armpiper/install/arm_control_pkg:/opt/ros/humble LD_LIBRARY_PATH=/home/lmz/armpiper/install/dynamixel_sdk_custom_interfaces/lib:/home/lmz/armpiper/install/dynamixel_sdk/lib:/home/lmz/armpiper/install/piper_msgs/lib:/home/lmz/armpiper/install/dynamixel_hardware_interface/lib:/home/lmz/armpiper/install/dynamixel_interfaces/lib:/opt/ros/humble/opt/rviz_ogre_vendor/lib:/opt/ros/humble/lib/x86_64-linux-gnu:/opt/ros/humble/lib /usr/bin/cmake --build /home/lmz/armpiper/build/dynamixel_sdk_examples -- -j16 -l16
+[8.079s] Invoking command in '/home/lmz/armpiper/build/dynamixel_sdk_examples': CMAKE_PREFIX_PATH=/home/lmz/armpiper/install/dynamixel_sdk_custom_interfaces:/home/lmz/armpiper/install/dynamixel_sdk:/home/lmz/armpiper/install/piper_with_gripper_moveit:/home/lmz/armpiper/install/piper_no_gripper_moveit:/home/lmz/armpiper/install/piper_mujoco:/home/lmz/armpiper/install/piper_msgs:/home/lmz/armpiper/install/piper_humble:/home/lmz/armpiper/install/piper_gazebo:/home/lmz/armpiper/install/piper_description:/home/lmz/armpiper/install/open_manipulator:/home/lmz/armpiper/install/open_manipulator_x_bringup:/home/lmz/armpiper/install/open_manipulator_x_description:/home/lmz/armpiper/install/dynamixel_sdk_examples:/home/lmz/armpiper/install/dynamixel_hardware_interface:/home/lmz/armpiper/install/dynamixel_interfaces:/home/lmz/armpiper/install/vla:/home/lmz/armpiper/install/interface:/home/lmz/armpiper/install/piper:/home/lmz/armpiper/install/leapsim:/home/lmz/armpiper/install/follow:/home/lmz/armpiper/install/arm_control_pkg:/opt/ros/humble LD_LIBRARY_PATH=/home/lmz/armpiper/install/dynamixel_sdk_custom_interfaces/lib:/home/lmz/armpiper/install/dynamixel_sdk/lib:/home/lmz/armpiper/install/piper_msgs/lib:/home/lmz/armpiper/install/dynamixel_hardware_interface/lib:/home/lmz/armpiper/install/dynamixel_interfaces/lib:/opt/ros/humble/opt/rviz_ogre_vendor/lib:/opt/ros/humble/lib/x86_64-linux-gnu:/opt/ros/humble/lib /usr/bin/cmake --install /home/lmz/armpiper/build/dynamixel_sdk_examples
+[8.090s] -- Install configuration: ""
+[8.091s] -- Execute custom install script
+[8.091s] -- Symlinking: /home/lmz/armpiper/install/dynamixel_sdk_examples/lib/dynamixel_sdk_examples/read_write_node
+[8.101s] -- Symlinking: /home/lmz/armpiper/install/dynamixel_sdk_examples/lib/dynamixel_sdk_examples/read_write_node.py
+[8.111s] -- Symlinking: /home/lmz/armpiper/install/dynamixel_sdk_examples/share/ament_index/resource_index/package_run_dependencies/dynamixel_sdk_examples
+[8.120s] -- Symlinking: /home/lmz/armpiper/install/dynamixel_sdk_examples/share/ament_index/resource_index/parent_prefix_path/dynamixel_sdk_examples
+[8.128s] -- Symlinking: /home/lmz/armpiper/install/dynamixel_sdk_examples/share/dynamixel_sdk_examples/environment/ament_prefix_path.sh
+[8.138s] -- Symlinking: /home/lmz/armpiper/install/dynamixel_sdk_examples/share/dynamixel_sdk_examples/environment/ament_prefix_path.dsv
+[8.144s] -- Symlinking: /home/lmz/armpiper/install/dynamixel_sdk_examples/share/dynamixel_sdk_examples/environment/path.sh
+[8.152s] -- Symlinking: /home/lmz/armpiper/install/dynamixel_sdk_examples/share/dynamixel_sdk_examples/environment/path.dsv
+[8.159s] -- Symlinking: /home/lmz/armpiper/install/dynamixel_sdk_examples/share/dynamixel_sdk_examples/local_setup.bash
+[8.168s] -- Symlinking: /home/lmz/armpiper/install/dynamixel_sdk_examples/share/dynamixel_sdk_examples/local_setup.sh
+[8.177s] -- Symlinking: /home/lmz/armpiper/install/dynamixel_sdk_examples/share/dynamixel_sdk_examples/local_setup.zsh
+[8.185s] -- Symlinking: /home/lmz/armpiper/install/dynamixel_sdk_examples/share/dynamixel_sdk_examples/local_setup.dsv
+[8.191s] -- Symlinking: /home/lmz/armpiper/install/dynamixel_sdk_examples/share/dynamixel_sdk_examples/package.dsv
+[8.197s] -- Symlinking: /home/lmz/armpiper/install/dynamixel_sdk_examples/share/ament_index/resource_index/packages/dynamixel_sdk_examples
+[8.207s] -- Symlinking: /home/lmz/armpiper/install/dynamixel_sdk_examples/share/dynamixel_sdk_examples/cmake/dynamixel_sdk_examplesConfig.cmake
+[8.215s] -- Symlinking: /home/lmz/armpiper/install/dynamixel_sdk_examples/share/dynamixel_sdk_examples/cmake/dynamixel_sdk_examplesConfig-version.cmake
+[8.222s] -- Symlinking: /home/lmz/armpiper/install/dynamixel_sdk_examples/share/dynamixel_sdk_examples/package.xml
+[8.233s] Invoked command in '/home/lmz/armpiper/build/dynamixel_sdk_examples' returned '0': CMAKE_PREFIX_PATH=/home/lmz/armpiper/install/dynamixel_sdk_custom_interfaces:/home/lmz/armpiper/install/dynamixel_sdk:/home/lmz/armpiper/install/piper_with_gripper_moveit:/home/lmz/armpiper/install/piper_no_gripper_moveit:/home/lmz/armpiper/install/piper_mujoco:/home/lmz/armpiper/install/piper_msgs:/home/lmz/armpiper/install/piper_humble:/home/lmz/armpiper/install/piper_gazebo:/home/lmz/armpiper/install/piper_description:/home/lmz/armpiper/install/open_manipulator:/home/lmz/armpiper/install/open_manipulator_x_bringup:/home/lmz/armpiper/install/open_manipulator_x_description:/home/lmz/armpiper/install/dynamixel_sdk_examples:/home/lmz/armpiper/install/dynamixel_hardware_interface:/home/lmz/armpiper/install/dynamixel_interfaces:/home/lmz/armpiper/install/vla:/home/lmz/armpiper/install/interface:/home/lmz/armpiper/install/piper:/home/lmz/armpiper/install/leapsim:/home/lmz/armpiper/install/follow:/home/lmz/armpiper/install/arm_control_pkg:/opt/ros/humble LD_LIBRARY_PATH=/home/lmz/armpiper/install/dynamixel_sdk_custom_interfaces/lib:/home/lmz/armpiper/install/dynamixel_sdk/lib:/home/lmz/armpiper/install/piper_msgs/lib:/home/lmz/armpiper/install/dynamixel_hardware_interface/lib:/home/lmz/armpiper/install/dynamixel_interfaces/lib:/opt/ros/humble/opt/rviz_ogre_vendor/lib:/opt/ros/humble/lib/x86_64-linux-gnu:/opt/ros/humble/lib /usr/bin/cmake --install /home/lmz/armpiper/build/dynamixel_sdk_examples

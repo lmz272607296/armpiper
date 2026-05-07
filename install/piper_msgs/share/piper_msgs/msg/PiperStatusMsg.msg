@@ -1,0 +1,1 @@
+/home/lmz/armpiper/src/piper_ros/piper_msgs/msg/PiperStatusMsg.msg

@@ -1,0 +1,1 @@
+/home/lmz/armpiper/build/dynamixel_interfaces/ament_cmake_environment_hooks/local_setup.bash

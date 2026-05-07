@@ -4,6 +4,10 @@ from setuptools import find_packages, setup
 
 package_name = 'interface'
 
+
+def glob_files(pattern):
+    return [path for path in glob(pattern) if os.path.isfile(path)]
+
 setup(
     name=package_name,
     version='0.0.0',
@@ -23,22 +27,22 @@ setup(
             ['resource/' + package_name]),
         ('share/' + package_name, ['package.xml']),
         (os.path.join('share', package_name, 'cache'), 
-         glob(os.path.join(package_name, 'cache', '*'))),
+         glob_files(os.path.join(package_name, 'cache', '*'))),
 
-        (os.path.join('share', package_name, 'cfg'), glob(os.path.join(package_name, 'cfg', '*.yaml'))),
+        (os.path.join('share', package_name, 'cfg'), glob_files(os.path.join(package_name, 'cfg', '*.yaml'))),
 
         (os.path.join('share', package_name, 'cfg/task'), 
-         glob(os.path.join(package_name,'cfg/task', '*'))),
+         glob_files(os.path.join(package_name,'cfg/task', '*'))),
 
 
         (os.path.join('share', package_name, 'cfg/train'), 
-         glob(os.path.join(package_name, 'cfg/train', '*'))),
+         glob_files(os.path.join(package_name, 'cfg/train', '*'))),
 
         (os.path.join('share', package_name, 'assets/urdf'),
-         glob(os.path.join('..', 'assets', 'urdf', '*.urdf')))
+         glob_files(os.path.join('..', 'assets', 'urdf', '*.urdf')))
         ,
         (os.path.join('share', package_name, 'assets/meshes'),
-         glob(os.path.join('..', 'assets', 'meshes', '*')))
+         glob_files(os.path.join('..', 'assets', 'meshes', '*')))
 
     ],
     
@@ -52,11 +56,15 @@ setup(
     entry_points={
         'console_scripts': [
         'ultimate_yolo_node_cpu=interface.ultimate_yolo_node_cpu:main',
-        'action1_4_move=interface.action1_4_move:main',
-        'action5_rot=interface.action5_rot:main',
-        'action6_gsp=interface.action6_gsp:main',
+         'action1_4_move=interface.action1_4_move:main',
+         'action5_rot=interface.action5_rot:main',
+         'action6_gsp=interface.action6_gsp:main',
         'action7_flat=interface.action7_flat:main',
         'action8_rst=interface.action8_rst:main',
+        'eye_in_hand_calibration_node=interface.eye_in_hand_calibration_node:main',
+        'chessboard_hand_eye_calibration_node=interface.chessboard_hand_eye_calibration_node:main',
+        'camera_base_transform_node=interface.camera_base_transform_node:main',
+        'piper_keyboard_joint_jog=interface.piper_keyboard_joint_jog:main',
         'master_node=interface.master_node:main',
         ],
     },

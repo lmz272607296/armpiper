@@ -1,0 +1,9 @@
+source;share/leapsim/hook/pythonpath.ps1
+source;share/leapsim/hook/pythonpath.dsv
+source;share/leapsim/hook/pythonpath.sh
+source;share/leapsim/hook/ament_prefix_path.ps1
+source;share/leapsim/hook/ament_prefix_path.dsv
+source;share/leapsim/hook/ament_prefix_path.sh
+source;../../build/leapsim/share/leapsim/hook/pythonpath_develop.ps1
+source;../../build/leapsim/share/leapsim/hook/pythonpath_develop.dsv
+source;../../build/leapsim/share/leapsim/hook/pythonpath_develop.sh

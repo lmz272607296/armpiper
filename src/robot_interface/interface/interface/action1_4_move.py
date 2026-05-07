@@ -33,7 +33,9 @@ class ActionMoveNode(Node):
         self.declare_parameter('position_tolerance', 0.0015)
         self.declare_parameter('max_final_error', 0.02)
         self.declare_parameter('fk_feedback_max_error', 0.08)
-        self.declare_parameter('orientation_weight', 0.0)
+        self.declare_parameter('orientation_weight', 0.35)
+        self.declare_parameter('cartesian_path_points', 18)
+        self.declare_parameter('horizontal_z_bias_m', 0.0)
         self.declare_parameter('enable_wrist_level_compensation', True)
         self.declare_parameter('wrist_level_axis_z', 0.0)
         self.declare_parameter('wrist_level_gain', 1.0)
@@ -45,6 +47,7 @@ class ActionMoveNode(Node):
         self.declare_parameter('home_duration_sec', 2.5)
         self.declare_parameter('command_rate_hz', 30.0)
         self.declare_parameter('dry_run', False)
+        self.declare_parameter('exit_after_action', False)
 
         arm_action_topic = self.get_parameter('arm_action_topic').value
         joint_feedback_topic = self.get_parameter('joint_feedback_topic').value
@@ -63,6 +66,8 @@ class ActionMoveNode(Node):
         self.max_final_error = float(self.get_parameter('max_final_error').value)
         self.fk_feedback_max_error = float(self.get_parameter('fk_feedback_max_error').value)
         self.orientation_weight = float(self.get_parameter('orientation_weight').value)
+        self.cartesian_path_points = max(2, int(self.get_parameter('cartesian_path_points').value))
+        self.horizontal_z_bias_m = float(self.get_parameter('horizontal_z_bias_m').value)
         self.enable_wrist_level_compensation = bool(self.get_parameter('enable_wrist_level_compensation').value)
         self.wrist_level_axis_z = float(self.get_parameter('wrist_level_axis_z').value)
         self.wrist_level_gain = float(self.get_parameter('wrist_level_gain').value)
@@ -74,6 +79,7 @@ class ActionMoveNode(Node):
         self.home_duration_sec = float(self.get_parameter('home_duration_sec').value)
         self.command_rate_hz = float(self.get_parameter('command_rate_hz').value)
         self.dry_run = bool(self.get_parameter('dry_run').value)
+        self.exit_after_action = bool(self.get_parameter('exit_after_action').value)
 
         self.joint_names = ['joint1', 'joint2', 'joint3', 'joint4', 'joint5', 'joint6']
         self.joint_lower = np.array([-2.618, 0.0, -2.967, -1.745, -1.22, -2.0944], dtype=float)
@@ -85,6 +91,9 @@ class ActionMoveNode(Node):
         self.current_end_pose_time = 0.0
         self.motion_lock = threading.Lock()
         self.motion_active = False
+        self.action_thread_lock = threading.Lock()
+        self.action_thread = None
+        self.exit_requested_after_action = False
 
         self.action_sub = self.create_subscription(
             String, arm_action_topic, self.action_callback, 10)
@@ -99,7 +108,8 @@ class ActionMoveNode(Node):
 
         self.get_logger().info(
             f'Piper IK 平移节点已启动: 订阅 {arm_action_topic}, {joint_feedback_topic}, {end_pose_topic}，'
-            f'发布关节命令到 {joint_command_topic}，dry_run={self.dry_run}'
+            f'发布关节命令到 {joint_command_topic}，dry_run={self.dry_run}, '
+            f'exit_after_action={self.exit_after_action}'
         )
 
     def joint_feedback_callback(self, msg):
@@ -120,6 +130,7 @@ class ActionMoveNode(Node):
         self.current_end_pose_time = time.time()
 
     def action_callback(self, msg):
+        handled = False
         try:
             action = json.loads(msg.data)
         except json.JSONDecodeError as exc:
@@ -128,30 +139,55 @@ class ActionMoveNode(Node):
 
         action_type = action.get('type')
         if action_type == 'move':
-            self.handle_move(action)
+            handled = self.start_move_thread(action)
         elif action_type == 'enable':
             self.handle_enable(True)
         elif action_type == 'disable':
             self.handle_enable(False)
         elif action_type == 'reset':
             self.publish_home_pose()
+            handled = True
         elif action_type == 'release':
             self.publish_status('收到放下指令：当前节点只控制 Piper 大臂。')
+            handled = True
         else:
             self.publish_status(f'未知动作类型: {action_type}')
 
+        if handled and self.exit_after_action:
+            self.exit_requested_after_action = True
+            if action_type != 'move':
+                self.publish_status('本次动作执行结束，action1_4_move 即将退出。')
+                threading.Thread(target=self.shutdown_soon, daemon=True).start()
+
+    def start_move_thread(self, action):
+        with self.action_thread_lock:
+            if self.action_thread is not None and self.action_thread.is_alive():
+                self.publish_status('已有移动动作正在执行，忽略新的移动命令。')
+                return False
+
+            self.action_thread = threading.Thread(
+                target=self.run_move_action,
+                args=(dict(action),),
+                daemon=True,
+            )
+            self.action_thread.start()
+            return True
+
+    def run_move_action(self, action):
+        try:
+            self.handle_move(action)
+        finally:
+            if self.exit_after_action or self.exit_requested_after_action:
+                self.publish_status('本次动作执行结束，action1_4_move 即将退出。')
+                self.shutdown_soon()
+
+    def shutdown_soon(self):
+        time.sleep(0.1)
+        if rclpy.ok():
+            rclpy.shutdown()
+
     def handle_move(self, action):
-        if self.current_joints is None:
-            self.publish_status('无法移动：尚未收到 /joint_states_single 关节反馈。')
-            return
-        if time.time() - self.current_joint_time > 1.0:
-            self.publish_status('无法移动：Piper 关节反馈超过 1 秒未更新。')
-            return
-        if self.current_end_pos is None or self.current_end_rot is None:
-            self.publish_status('无法移动：尚未收到 /end_pose_stamped 末端位姿反馈。')
-            return
-        if time.time() - self.current_end_pose_time > 1.0:
-            self.publish_status('无法移动：Piper 末端位姿反馈超过 1 秒未更新。')
+        if not self.feedback_is_ready():
             return
 
         direction = action.get('direction')
@@ -162,8 +198,8 @@ class ActionMoveNode(Node):
             self.publish_status(f'无法移动：未知方向 {direction}')
             return
 
-        current_q = np.clip(self.current_joints.copy(), self.joint_lower, self.joint_upper)
-        fk_pos, _, _ = self.forward_kinematics(current_q)
+        start_q = np.clip(self.current_joints.copy(), self.joint_lower, self.joint_upper)
+        fk_pos, _, _ = self.forward_kinematics(start_q)
         fk_feedback_error = float(np.linalg.norm(fk_pos - self.current_end_pos))
         if fk_feedback_error > self.fk_feedback_max_error:
             self.publish_status(
@@ -172,43 +208,96 @@ class ActionMoveNode(Node):
             )
             return
 
-        target_pos = self.current_end_pos + np.array(offset, dtype=float)
+        start_pos = self.current_end_pos.copy()
         target_rot = self.current_end_rot.copy()
+        offset = np.array(offset, dtype=float)
+        start_z = float(start_pos[2])
+        path_points = max(2, self.cartesian_path_points)
+        joint_path = []
+        q_seed = start_q.copy()
+        max_final_error = 0.0
+        max_joint_delta = 0.0
+        total_wrist_level_correction = 0.0
+        wrist_level_error = 0.0
 
-        target_q, final_error = self.solve_ik(current_q, target_pos, target_rot)
-        if final_error > self.max_final_error:
-            self.publish_status(f'IK 误差过大 {final_error:.4f}m，已拒绝发送。')
-            return
+        for point_index in range(1, path_points + 1):
+            ratio = point_index / path_points
+            target_pos = start_pos + offset * ratio
+            # Optional smooth feed-forward height bias: zero at both ends, max at mid path.
+            if self.horizontal_z_bias_m != 0.0:
+                target_pos[2] = start_z + math.sin(math.pi * ratio) * self.horizontal_z_bias_m
+            else:
+                target_pos[2] = start_z
 
-        wrist_level_correction = 0.0
-        wrist_level_error = self.get_wrist_level_error(target_q)
-        if self.enable_wrist_level_compensation:
-            target_q, wrist_level_correction, wrist_level_error = self.compensate_joint5_wrist_level(target_q)
-            compensated_pos, _, _ = self.forward_kinematics(target_q)
-            final_error = float(np.linalg.norm(target_pos - compensated_pos))
+            target_q, final_error = self.solve_ik(q_seed, target_pos, target_rot)
             if final_error > self.max_final_error:
                 self.publish_status(
-                    f'joint5 腕部水平补偿后 IK 误差 {final_error:.4f}m 超过阈值，已拒绝发送。'
+                    f'第 {point_index}/{path_points} 个笛卡尔路径点 IK 误差过大 '
+                    f'{final_error:.4f}m，已拒绝发送。'
                 )
                 return
 
-        raw_delta = target_q - current_q
-        delta = np.clip(raw_delta, -self.max_command_joint_delta_rad, self.max_command_joint_delta_rad)
-        command_q = np.clip(current_q + delta, self.joint_lower, self.joint_upper)
-        if not np.all(np.isfinite(command_q)):
-            self.publish_status('IK 结果包含非法数值，已拒绝发送。')
+            wrist_level_correction = 0.0
+            wrist_level_error = self.get_wrist_level_error(target_q)
+            if self.enable_wrist_level_compensation:
+                target_q, wrist_level_correction, wrist_level_error = self.compensate_joint5_wrist_level(target_q)
+                compensated_pos, _, _ = self.forward_kinematics(target_q)
+                final_error = float(np.linalg.norm(target_pos - compensated_pos))
+                if final_error > self.max_final_error:
+                    self.publish_status(
+                        f'第 {point_index}/{path_points} 个笛卡尔路径点 joint5 腕部水平补偿后 IK 误差 '
+                        f'{final_error:.4f}m 超过阈值，已拒绝发送。'
+                    )
+                    return
+
+            target_q = np.clip(target_q, self.joint_lower, self.joint_upper)
+            if not np.all(np.isfinite(target_q)):
+                self.publish_status('IK 结果包含非法数值，已拒绝发送。')
+                return
+
+            step_delta = target_q - q_seed
+            max_joint_delta = max(max_joint_delta, float(np.max(np.abs(step_delta))))
+            if np.max(np.abs(step_delta)) > self.max_command_joint_delta_rad:
+                self.publish_status(
+                    f'第 {point_index}/{path_points} 个笛卡尔路径点关节跳变 '
+                    f'{np.max(np.abs(step_delta)):.3f}rad 超过阈值 '
+                    f'{self.max_command_joint_delta_rad:.3f}rad，已拒绝发送。'
+                )
+                return
+
+            max_final_error = max(max_final_error, final_error)
+            total_wrist_level_correction += float(wrist_level_correction)
+            joint_path.append(target_q.copy())
+            q_seed = target_q.copy()
+
+        if not self.publish_joint_path_command(joint_path, self.motion_duration_sec):
             return
 
-        if not self.publish_smoothed_joint_command(command_q, self.motion_duration_sec):
-            return
+        final_target_pos = start_pos + offset
         self.publish_status(
-            f"已发送 Piper IK {self.direction_text(direction)}平移 {abs(distance):.3f} 米："
-            f"目标 XYZ=({target_pos[0]:.3f}, {target_pos[1]:.3f}, {target_pos[2]:.3f})，"
-            f"IK误差={final_error:.4f}m，FK/反馈误差={fk_feedback_error:.4f}m，"
-            f"目标关节={np.round(command_q, 3).tolist()}，"
-            f"最大关节变化={np.max(np.abs(delta)):.3f}rad，"
-            f"joint5水平补偿={wrist_level_correction:.3f}rad，腕轴Z误差={wrist_level_error:.3f}"
+            f"已发送 Piper 连续笛卡尔 IK {self.direction_text(direction)}平移 {abs(distance):.3f} 米："
+            f"目标 XYZ=({final_target_pos[0]:.3f}, {final_target_pos[1]:.3f}, {final_target_pos[2]:.3f})，"
+            f"路径点={path_points}，最大IK误差={max_final_error:.4f}m，FK/反馈误差={fk_feedback_error:.4f}m，"
+            f"目标关节={np.round(joint_path[-1], 3).tolist() if joint_path else []}，"
+            f"最大路径关节步长={max_joint_delta:.3f}rad，"
+            f"累计joint5水平补偿={total_wrist_level_correction:.3f}rad，腕轴Z误差={wrist_level_error:.3f}，"
+            f"Z前馈={self.horizontal_z_bias_m:.4f}m"
         )
+
+    def feedback_is_ready(self):
+        if self.current_joints is None:
+            self.publish_status('无法移动：尚未收到 /joint_states_single 关节反馈。')
+            return False
+        if time.time() - self.current_joint_time > 1.0:
+            self.publish_status('无法移动：Piper 关节反馈超过 1 秒未更新。')
+            return False
+        if self.current_end_pos is None or self.current_end_rot is None:
+            self.publish_status('无法移动：尚未收到 /end_pose_stamped 末端位姿反馈。')
+            return False
+        if time.time() - self.current_end_pose_time > 1.0:
+            self.publish_status('无法移动：Piper 末端位姿反馈超过 1 秒未更新。')
+            return False
+        return True
 
     def handle_enable(self, enable):
         if not self.enable_client.wait_for_service(timeout_sec=1.0):
@@ -256,7 +345,7 @@ class ActionMoveNode(Node):
         msg.header.stamp = self.get_clock().now().to_msg()
         msg.header.frame_id = 'piper_single'
         msg.name = list(self.joint_names)
-        msg.position = joints.tolist()
+        msg.position = [float(value) for value in joints]
         msg.velocity = [0.0] * 6
         msg.effort = [0.0] * 6
         self.joint_cmd_pub.publish(msg)
@@ -287,6 +376,51 @@ class ActionMoveNode(Node):
                 ratio = index / steps
                 smooth_ratio = ratio * ratio * (3.0 - 2.0 * ratio)
                 command = start_joints + (target_joints - start_joints) * smooth_ratio
+                self.publish_joint_command(command)
+                time.sleep(sleep_sec)
+
+            return True
+        finally:
+            with self.motion_lock:
+                self.motion_active = False
+
+    def publish_joint_path_command(self, joint_path, duration_sec, require_fresh_feedback=True):
+        if len(joint_path) == 0:
+            self.publish_status('无法发送关节路径：路径为空。')
+            return False
+
+        with self.motion_lock:
+            if self.motion_active:
+                self.publish_status('已有平滑运动正在执行，忽略新的运动命令。')
+                return False
+            self.motion_active = True
+
+        try:
+            if self.current_joints is None:
+                self.publish_status('无法发送关节路径：尚未收到当前关节反馈。')
+                return False
+            if require_fresh_feedback and time.time() - self.current_joint_time > 1.0:
+                self.publish_status('无法发送关节路径：Piper 关节反馈超过 1 秒未更新。')
+                return False
+
+            start_joints = np.clip(self.current_joints.copy(), self.joint_lower, self.joint_upper)
+            path = np.vstack([start_joints] + [
+                np.clip(np.asarray(point, dtype=float), self.joint_lower, self.joint_upper)
+                for point in joint_path
+            ])
+            duration_sec = max(0.1, float(duration_sec))
+            rate_hz = max(5.0, float(self.command_rate_hz))
+            steps = max(2, int(duration_sec * rate_hz))
+            sleep_sec = 1.0 / rate_hz
+            segment_count = path.shape[0] - 1
+
+            for index in range(1, steps + 1):
+                ratio = index / steps
+                smooth_ratio = ratio * ratio * (3.0 - 2.0 * ratio)
+                path_position = smooth_ratio * segment_count
+                segment_index = min(int(path_position), segment_count - 1)
+                local_ratio = path_position - segment_index
+                command = path[segment_index] + (path[segment_index + 1] - path[segment_index]) * local_ratio
                 self.publish_joint_command(command)
                 time.sleep(sleep_sec)
 

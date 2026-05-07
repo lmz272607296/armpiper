@@ -1,0 +1,7 @@
+[console_scripts]
+game = leapsim.game:main
+hello = leapsim.hello:main
+inference = leapsim.grasp_inference:main
+rot = leapsim.deploy:main
+zero = leapsim.ping:main
+

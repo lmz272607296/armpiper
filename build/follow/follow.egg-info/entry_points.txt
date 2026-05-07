@@ -1,0 +1,4 @@
+[console_scripts]
+follow = follow.communication:main
+pico = follow.pico:main
+

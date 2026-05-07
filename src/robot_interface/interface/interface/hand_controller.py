@@ -6,6 +6,8 @@
 # --------------------------------------------------------
 
 
+import time
+
 from matplotlib import scale
 from matplotlib.pyplot import sca
 import rclpy
@@ -53,6 +55,7 @@ class LeapHand(Node):
         #读取电机状态的订阅器，订阅话题为/hand_joint_states，避免与Piper机械臂冲突
         self.raw_positions = None
         self.real_raw_positions = None
+        self.last_state_time = 0.0
 
 
 
@@ -117,7 +120,8 @@ class LeapHand(Node):
             
             self.raw_positions = np.reshape(self.raw_positions, (1, len(self.raw_positions)))
             self.real_raw_positions = np.reshape(self.real_raw_positions, (1, len(self.real_raw_positions)))
-             
+            self.last_state_time = time.time()
+              
         except Exception as e:
             self.get_logger().error(f"Positions message launching error: {repr(e)}")
 
@@ -132,9 +136,9 @@ class LeapHand(Node):
 
         #------------------------------------- 
         # 微调各个电机的角度
-        opration=np.array([0,0.1,0,0,
-                           0,0.1,0,0,
-                           0,0.1,0,0,
+        opration=np.array([0,0.0,0,0,
+                           0,0.0,0,0,
+                           0,0.0,0,0,
                            0,0,0,0])
             
         #-------------------------------------
@@ -166,7 +170,7 @@ class LeapHand(Node):
             transtime=0.0
             for point in scaled_pose:
                 point_ja=JointTrajectoryPoint()
-                point_ja.positions=point.tolist()
+                point_ja.positions=[float(value) for value in point]
                 # print("point:",point)
                 
                 #############################################################################
@@ -190,6 +194,13 @@ class LeapHand(Node):
         except Exception as e:
             self.get_logger().error(f"Publishing error: {str(e)}")
             return False
+
+    def hold_current_position(self, duration=0.05):
+        if self.raw_positions is None:
+            self.get_logger().warn('当前没有可用的手部状态，无法发送停止保持指令。')
+            return False
+        current_pose = np.asarray(self.raw_positions, dtype=float).reshape(1, self.joints_num)
+        return self.command_joint_position(current_pose, duration)
 
    
     def real_to_sim(self, values):

@@ -17,15 +17,7 @@ def generate_launch_description():
     use_fake_hardware = LaunchConfiguration('use_fake_hardware')
     use_sim = LaunchConfiguration('use_sim')
 
-    # ################################################################### #
-    # #                  MODIFICATION START                             # #
-
-
-    arm_port_name = LaunchConfiguration('arm_port_name')
     hand_port_name = LaunchConfiguration('hand_port_name')
-
-    # #                  MODIFICATION END                               # #
-    # ################################################################### #
 
 
 
@@ -50,21 +42,10 @@ def generate_launch_description():
             default_value='false',
             description='Start robot in Gazebo simulation.'),
 
-        # ################################################################### #
-        # #                  MODIFICATION START                             # #
-
-        DeclareLaunchArgument(
-            'arm_port_name',
-            default_value='/dev/ttyarm',
-            description='The port name for the arm hardware.'),
-
         DeclareLaunchArgument(
             'hand_port_name',
             default_value='/dev/ttyhand',
             description='The port name for the hand hardware.'),
-
-        # #                  MODIFICATION END                               # #
-        # ################################################################### #
 
 
 
@@ -75,11 +56,7 @@ def generate_launch_description():
                 'prefix': prefix,
                 'use_fake_hardware': use_fake_hardware,
                 'use_sim': use_sim,
-
-                # ### MODIFICATION START ###
-                'arm_port_name': arm_port_name,
                 'hand_port_name': hand_port_name,
-                # ### MODIFICATION END ###
                 
             }.items(),
         ),

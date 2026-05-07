@@ -1,0 +1,1 @@
+/home/lmz/armpiper/build/dynamixel_interfaces/ament_cmake_core/dynamixel_interfacesConfig.cmake

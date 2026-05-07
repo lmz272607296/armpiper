@@ -1,0 +1,13 @@
+[console_scripts]
+action1_4_move = interface.action1_4_move:main
+action5_rot = interface.action5_rot:main
+action6_gsp = interface.action6_gsp:main
+action7_flat = interface.action7_flat:main
+action8_rst = interface.action8_rst:main
+camera_base_transform_node = interface.camera_base_transform_node:main
+chessboard_hand_eye_calibration_node = interface.chessboard_hand_eye_calibration_node:main
+eye_in_hand_calibration_node = interface.eye_in_hand_calibration_node:main
+master_node = interface.master_node:main
+piper_keyboard_joint_jog = interface.piper_keyboard_joint_jog:main
+ultimate_yolo_node_cpu = interface.ultimate_yolo_node_cpu:main
+

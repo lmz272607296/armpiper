@@ -5,6 +5,7 @@ import rclpy
 from rclpy.node import Node
 from sensor_msgs.msg import JointState
 from std_msgs.msg import Bool
+from trajectory_msgs.msg import JointTrajectory
 import time
 import threading
 import argparse
@@ -75,7 +76,10 @@ class PiperRosNode(Node):
         # Start subscription thread
         self.create_subscription(PosCmd, 'pos_cmd', self.pos_callback, 1)
         self.create_subscription(JointState, 'joint_ctrl_single', self.joint_callback, 1)
+        self.create_subscription(JointTrajectory, 'joint_trajectory_single', self.joint_trajectory_callback, 1)
         self.create_subscription(Bool, 'enable_flag', self.enable_callback, 1)
+        self.trajectory_lock = threading.Lock()
+        self.trajectory_generation = 0
 
         self.publisher_thread = threading.Thread(target=self.publish_thread)
         self.publisher_thread.start()
@@ -353,8 +357,13 @@ class PiperRosNode(Node):
             joint_data (): 
         """
         factor = 57324.840764 #1000*180/3.14
-        factor1 = 57.32484
-        print(self.can_port)
+        if len(joint_data.position) < 6:
+            self.get_logger().warn(
+                f"Ignoring joint command with {len(joint_data.position)} positions; expected at least 6."
+            )
+            return
+
+        self.get_logger().debug(f"Received joint command on {self.can_port}")
         # rospy.loginfo("Received Joint States:")
         # rospy.loginfo("joint_0: %f", joint_data.position[0]*1)
         # rospy.loginfo("joint_1: %f", joint_data.position[1]*1)
@@ -369,16 +378,56 @@ class PiperRosNode(Node):
         joint_3 = round(joint_data.position[3]*factor)
         joint_4 = round(joint_data.position[4]*factor)
         joint_5 = round(joint_data.position[5]*factor)
-        joint_6 = round(joint_data.position[6]*1000*1000)
+        joint_6 = 0
+        if len(joint_data.position) >= 7:
+            joint_6 = round(joint_data.position[6]*1000*1000)
         if(joint_6>80000): joint_6 = 80000
         if(joint_6<0): joint_6 = 0
         if(self.GetEnableFlag()):
-            self.piper.MotionCtrl_2(0x01, 0x01, 50,0xad)
+            self.piper.MotionCtrl_2(0x01, 0x01, 50)
             self.piper.JointCtrl(joint_0, joint_1, joint_2, 
                                     joint_3, joint_4, joint_5)
-            self.piper.GripperCtrl(abs(joint_6), 1000, 0x01, 0)
-            self.piper.MotionCtrl_2(0x01, 0x01, 50,0xad)
+            if self.gripper_exist and len(joint_data.position) >= 7:
+                self.piper.GripperCtrl(abs(joint_6), 1000, 0x01, 0)
             pass
+
+    def joint_trajectory_callback(self, trajectory_data):
+        if not trajectory_data.points:
+            self.get_logger().warn("Ignoring empty joint trajectory command.")
+            return
+
+        with self.trajectory_lock:
+            self.trajectory_generation += 1
+            generation = self.trajectory_generation
+
+        thread = threading.Thread(
+            target=self.execute_joint_trajectory,
+            args=(trajectory_data, generation),
+            daemon=True,
+        )
+        thread.start()
+
+    def execute_joint_trajectory(self, trajectory_data, generation):
+        start_time = time.time()
+        for point in trajectory_data.points:
+            with self.trajectory_lock:
+                if generation != self.trajectory_generation:
+                    return
+
+            target_time = self.duration_to_seconds(point.time_from_start)
+            sleep_time = start_time + target_time - time.time()
+            if sleep_time > 0.0:
+                time.sleep(sleep_time)
+
+            joint_state = JointState()
+            joint_state.name = list(trajectory_data.joint_names)
+            joint_state.position = [float(value) for value in point.positions]
+            joint_state.velocity = [float(value) for value in point.velocities]
+            joint_state.effort = [float(value) for value in point.effort]
+            self.joint_callback(joint_state)
+
+    def duration_to_seconds(self, duration):
+        return float(duration.sec) + float(duration.nanosec) * 1e-9
 
     def enable_callback(self, enable_flag: Bool):
         """Callback function for enabling the robotic arm

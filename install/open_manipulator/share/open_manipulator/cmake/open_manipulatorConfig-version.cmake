@@ -1,0 +1,1 @@
+/home/lmz/armpiper/build/open_manipulator/ament_cmake_core/open_manipulatorConfig-version.cmake

@@ -7,7 +7,8 @@ import numpy as np
 
 
 BOTTLE_GRASP_HEIGHT = 0.15
-FRUIT_GRASP_HEIGHT = 0.04
+FRUIT_GRASP_HEIGHT = 0.15
+FRUIT_RELEASE_HEIGHT = 0.18
 DEFAULT_TABLE_Z = 0.0
 DEFAULT_BOTTLE_DIAMETER = 0.07
 DEFAULT_BOTTLE_RADIUS = DEFAULT_BOTTLE_DIAMETER * 0.5
@@ -17,6 +18,7 @@ BASE_LINK_NAME = "base_link"
 ARM_JOINT_NAMES = tuple(f"joint{i}" for i in range(1, 7))
 POSITION_TOLERANCE = 0.02
 PALM_TILT_TOLERANCE = math.radians(5.0)
+WORLD_Z_AXIS = np.array([0.0, 0.0, 1.0], dtype=float)
 
 
 def default_urdf_path():
@@ -183,10 +185,11 @@ def compute_bottle_grasp_position(
 
 
 class PiperArmKinematics:
-    def __init__(self, urdf_path=None, base_link=BASE_LINK_NAME, palm_link=PALM_LINK_NAME):
+    def __init__(self, urdf_path=None, base_link=BASE_LINK_NAME, palm_link=PALM_LINK_NAME, joint6_locked_value=None):
         self.urdf_path = os.path.abspath(urdf_path or default_urdf_path())
         self.base_link = base_link
         self.palm_link = palm_link
+        self.joint6_locked_value = joint6_locked_value
         self.joints = self._load_chain()
         self.command_joint_names = ARM_JOINT_NAMES
         self.command_index = {name: index for index, name in enumerate(self.command_joint_names)}
@@ -250,9 +253,12 @@ class PiperArmKinematics:
 
         # joint6 is mechanically locked in the current URDF and is treated as fixed for IK.
         joint6_index = self.command_index["joint6"]
-        joint6_mid = 0.5 * (lower[joint6_index] + upper[joint6_index])
-        lower[joint6_index] = joint6_mid
-        upper[joint6_index] = joint6_mid
+        if self.joint6_locked_value is None:
+            joint6_value = 0.5 * (lower[joint6_index] + upper[joint6_index])
+        else:
+            joint6_value = float(self.joint6_locked_value)
+        lower[joint6_index] = joint6_value
+        upper[joint6_index] = joint6_value
         return lower, upper
 
     def _active_command_indices(self):
@@ -306,8 +312,8 @@ class PiperArmKinematics:
 
 
 class PiperArmIK:
-    def __init__(self, urdf_path=None):
-        self.kinematics = PiperArmKinematics(urdf_path=urdf_path)
+    def __init__(self, urdf_path=None, joint6_locked_value=None):
+        self.kinematics = PiperArmKinematics(urdf_path=urdf_path, joint6_locked_value=joint6_locked_value)
 
     def _seed_commands(self, target_position=None, seed=None):
         seeds = []
@@ -344,6 +350,7 @@ class PiperArmIK:
         self,
         target_position,
         target_palm_y=np.array([0.0, 0.0, 1.0], dtype=float),
+        target_palm_z=None,
         seed=None,
         max_iters=250,
         damping=0.05,
@@ -351,32 +358,63 @@ class PiperArmIK:
         orientation_weight=1.0,
         position_tolerance=POSITION_TOLERANCE,
         palm_tilt_tolerance=PALM_TILT_TOLERANCE,
+        locked_joints=None,
     ):
         target_position = np.asarray(target_position, dtype=float).reshape(3)
         if target_palm_y is not None:
             target_palm_y = np.asarray(target_palm_y, dtype=float).reshape(3)
             target_palm_y = target_palm_y / max(np.linalg.norm(target_palm_y), 1e-12)
+        if target_palm_z is not None:
+            target_palm_z = np.asarray(target_palm_z, dtype=float).reshape(3)
+            target_palm_z = target_palm_z / max(np.linalg.norm(target_palm_z), 1e-12)
+        locked_indices = []
+        locked_values = {}
+        for name, value in (locked_joints or {}).items():
+            if name not in self.kinematics.command_index:
+                raise ValueError(f"Unknown locked joint '{name}'")
+            index = self.kinematics.command_index[name]
+            locked_indices.append(index)
+            locked_values[index] = float(value)
+
+        def apply_locked(joints):
+            for index, value in locked_values.items():
+                joints[index] = value
+            return self.kinematics.clamp(joints)
+
+        active = np.array(
+            [index for index in self.kinematics.active_indices if index not in locked_indices],
+            dtype=int,
+        )
 
         best = None
         for seed_value in self._seed_commands(target_position=target_position, seed=seed):
-            joint_positions = seed_value.copy()
+            joint_positions = apply_locked(seed_value.copy())
             for _ in range(max_iters):
                 palm_position, palm_rotation = self.kinematics.palm_pose(joint_positions)
                 position_error = target_position - palm_position
                 jacobian = self.kinematics.jacobian(joint_positions)
 
-                if target_palm_y is None or orientation_weight <= 0.0:
+                orientation_errors = []
+                orientation_jacobians = []
+                if target_palm_y is not None and orientation_weight > 0.0:
+                    current_palm_y = palm_rotation[:, 1]
+                    orientation_errors.append(np.cross(current_palm_y, target_palm_y) * orientation_weight)
+                    orientation_jacobians.append(jacobian[3:, :] * orientation_weight)
+                if target_palm_z is not None and orientation_weight > 0.0:
+                    current_palm_z = palm_rotation[:, 2]
+                    orientation_errors.append(np.cross(current_palm_z, target_palm_z) * orientation_weight)
+                    orientation_jacobians.append(jacobian[3:, :] * orientation_weight)
+
+                if orientation_errors:
+                    error = np.concatenate([position_error, *orientation_errors])
+                    task_jacobian = np.vstack([jacobian[:3, :], *orientation_jacobians])
+                else:
                     error = position_error
                     task_jacobian = jacobian[:3, :]
-                else:
-                    current_palm_y = palm_rotation[:, 1]
-                    axis_error = np.cross(current_palm_y, target_palm_y) * orientation_weight
-                    error = np.concatenate([position_error, axis_error])
-                    task_jacobian = jacobian.copy()
-                    task_jacobian[3:, :] *= orientation_weight
 
-                active = self.kinematics.active_indices
                 active_jacobian = task_jacobian[:, active]
+                if active_jacobian.size == 0:
+                    break
                 lhs = active_jacobian @ active_jacobian.T + (damping * damping) * np.eye(active_jacobian.shape[0])
                 try:
                     delta_active = active_jacobian.T @ np.linalg.solve(lhs, error)
@@ -384,7 +422,7 @@ class PiperArmIK:
                     delta_active = active_jacobian.T @ (np.linalg.pinv(lhs) @ error)
 
                 joint_positions[active] += step_size * delta_active
-                joint_positions = self.kinematics.clamp(joint_positions)
+                joint_positions = apply_locked(joint_positions)
 
             result = self._make_result(
                 joint_positions,
@@ -392,6 +430,7 @@ class PiperArmIK:
                 target_palm_y,
                 position_tolerance,
                 palm_tilt_tolerance,
+                target_palm_z=target_palm_z,
             )
             if best is None or result.score < best.score:
                 best = result
@@ -405,17 +444,25 @@ class PiperArmIK:
         target_palm_y,
         position_tolerance,
         palm_tilt_tolerance,
+        target_palm_z=None,
     ):
         achieved_position, achieved_rotation = self.kinematics.palm_pose(joint_positions)
         position_error = float(np.linalg.norm(achieved_position - target_position))
 
-        if target_palm_y is None:
+        axis_errors = []
+        if target_palm_y is not None:
+            current_palm_y = achieved_rotation[:, 1]
+            axis_errors.append(_angle_between(current_palm_y, target_palm_y))
+        if target_palm_z is not None:
+            current_palm_z = achieved_rotation[:, 2]
+            axis_errors.append(_angle_between(current_palm_z, target_palm_z))
+
+        if axis_errors:
+            palm_axis_error = max(axis_errors)
+            score = max(position_error / position_tolerance, palm_axis_error / palm_tilt_tolerance)
+        else:
             palm_axis_error = None
             score = position_error / position_tolerance
-        else:
-            current_palm_y = achieved_rotation[:, 1]
-            palm_axis_error = _angle_between(current_palm_y, target_palm_y)
-            score = max(position_error / position_tolerance, palm_axis_error / palm_tilt_tolerance)
 
         return IkResult(
             joint_positions=self.kinematics.clamp(joint_positions),
@@ -425,6 +472,48 @@ class PiperArmIK:
             palm_axis_error=palm_axis_error,
             success=score <= 1.0,
             score=float(score),
+        )
+
+    def solve_fruit_grasp(
+        self,
+        fruit_center,
+        seed=None,
+        table_z=DEFAULT_TABLE_Z,
+        grasp_height=FRUIT_GRASP_HEIGHT,
+    ):
+        fruit_center = _as_point(fruit_center)
+        target_position = np.array(
+            [fruit_center[0], fruit_center[1], fruit_center[2] + float(grasp_height)],
+            dtype=float,
+        )
+        return self.solve(
+            target_position,
+            target_palm_y=None,
+            target_palm_z=WORLD_Z_AXIS,
+            seed=seed,
+            locked_joints={"joint4": 0.0, "joint6": 0.0},
+            orientation_weight=1.0,
+        )
+
+    def solve_fruit_release(
+        self,
+        current_joint_positions,
+        release_height=FRUIT_RELEASE_HEIGHT,
+        table_z=DEFAULT_TABLE_Z,
+    ):
+        current_joint_positions = self.kinematics.clamp(current_joint_positions)
+        current_position, _ = self.kinematics.palm_pose(current_joint_positions)
+        target_position = np.array(
+            [current_position[0], current_position[1], float(table_z) + float(release_height)],
+            dtype=float,
+        )
+        return self.solve(
+            target_position,
+            target_palm_y=None,
+            target_palm_z=WORLD_Z_AXIS,
+            seed=current_joint_positions,
+            locked_joints={"joint4": 0.0, "joint6": 0.0},
+            orientation_weight=1.0,
         )
 
     def solve_bottle_grasp(

@@ -12,34 +12,16 @@ from gym import spaces
 from rl_games.algos_torch import model_builder
 from rl_games.torch_runner import Runner, _override_sigma
 
+from interface.motion_utils import (
+    as_row,
+    refresh_current_arm,
+    refresh_current_hand,
+    scale_action,
+)
 from interface.learning import amp_models, amp_network_builder, amp_players
 from interface.learning import no_isaac_amp_continuous
 from interface.utils.no_isaac_rlgames_utils import RLGPUAlgoObserver
 from interface.utils.reformat import omegaconf_to_dict
-
-
-def as_row(data, width=None):
-    array = np.asarray(data, dtype=float)
-    if array.ndim == 1:
-        array = array.reshape(1, -1)
-    if array.ndim != 2:
-        raise ValueError(f"Expected a 1D or 2D array, got shape {array.shape}")
-    if width is not None and array.shape[1] != width:
-        raise ValueError(f"Expected {width} columns, got shape {array.shape}")
-    return array
-
-
-def scale_action(origin, target, scale):
-    if not isinstance(scale, int) or scale <= 0:
-        raise ValueError("scale must be a positive integer")
-
-    origin = as_row(origin)
-    target = as_row(target)
-    if origin.shape[1] != target.shape[1]:
-        raise ValueError(f"Shape mismatch: origin {origin.shape}, target {target.shape}")
-
-    factors = np.arange(scale + 1, dtype=float).reshape(-1, 1)
-    return origin + factors * ((target - origin) / scale)
 
 
 def angle_transfer(data):
@@ -69,9 +51,10 @@ def wait_for_joint_state(leap=None, arm=None, need_hand=False, need_arm=False, t
 
 def smooth_arm_to_current_target(arm, target, scale, speed, extra_wait=0.0):
     target = as_row(target, 6)
-    current = as_row(arm.raw_positions, 6)
+    current = refresh_current_arm(arm)
     trajectory = scale_action(current, target, scale)
-    arm.command_joint_position(trajectory, speed)
+    if not arm.command_joint_position(trajectory, speed):
+        raise RuntimeError("Failed to publish arm trajectory")
     time.sleep(scale * speed + extra_wait)
     return trajectory
 
@@ -116,14 +99,18 @@ def load_checkpoint(player, checkpoint_path):
 
 
 class GraspInferenceAgent:
-    def __init__(self, config, checkpoint_path, dof_limit_type):
+    def __init__(self, config, checkpoint_path, dof_limit_type, max_inference_steps=600):
         self.config = omegaconf_to_dict(config)
-        self._set_defaults()
         self.action_scale = 1 / 24
         self.actions_num = 21
         self.device = "cpu"
         self.checkpoint_to_load = checkpoint_path
         self.external_target_position = None
+        self.max_inference_steps = max(1, int(max_inference_steps))
+        self.include_phase_feature = False
+        self.include_obj_scale_feature = False
+        self.expected_num_obs = None
+        self._set_defaults()
         self.init_pose = self._fetch_grasp_state()
 
         if dof_limit_type == "xie":
@@ -136,6 +123,62 @@ class GraspInferenceAgent:
         env = self.config["task"]["env"]
         env.setdefault("include_history", True)
         env.setdefault("include_targets", True)
+        env.setdefault("include_obj_pose", False)
+        self.expected_num_obs = self._infer_num_observations_from_checkpoint()
+        configured_num_obs = int(env.get("numObservations", 0) or 0)
+        if self.expected_num_obs is not None and configured_num_obs != self.expected_num_obs:
+            print(
+                f"Override numObservations from {configured_num_obs} to {self.expected_num_obs} "
+                f"based on checkpoint '{os.path.expanduser(self.checkpoint_to_load)}'"
+            )
+            env["numObservations"] = self.expected_num_obs
+        elif configured_num_obs > 0:
+            self.expected_num_obs = configured_num_obs
+
+        self._configure_optional_observation_features()
+
+    def _infer_num_observations_from_checkpoint(self):
+        expanded_path = os.path.expanduser(self.checkpoint_to_load)
+        checkpoint = torch.load(expanded_path, map_location="cpu", weights_only=False)
+
+        running_stats = checkpoint.get("running_mean_std")
+        if running_stats and "running_mean" in running_stats:
+            running_mean = running_stats["running_mean"]
+            if hasattr(running_mean, "shape") and running_mean.ndim == 1:
+                return int(running_mean.shape[0])
+
+        model_state = checkpoint.get("model", {})
+        rnn_weight = model_state.get("a2c_network.rnn.rnn.weight_ih_l0")
+        if hasattr(rnn_weight, "shape") and len(rnn_weight.shape) == 2:
+            return int(rnn_weight.shape[1])
+
+        return None
+
+    def _configure_optional_observation_features(self):
+        env = self.config["task"]["env"]
+        append_iters = 3 if env["include_history"] else 1
+        per_frame_dim = 21
+        if env["include_targets"]:
+            per_frame_dim += 21
+        if env["include_obj_pose"]:
+            per_frame_dim += 3
+
+        expected_num_obs = int(self.expected_num_obs or env["numObservations"])
+        remaining_dim = expected_num_obs - append_iters * per_frame_dim
+
+        if remaining_dim >= append_iters * 2 and "phase_period" in env:
+            self.include_phase_feature = True
+            remaining_dim -= append_iters * 2
+
+        if remaining_dim >= append_iters:
+            self.include_obj_scale_feature = True
+            remaining_dim -= append_iters
+
+        if remaining_dim != 0:
+            print(
+                f"Observation dim mismatch remains after optional features: {remaining_dim}. "
+                "Inference inputs will be zero-padded or trimmed as needed."
+            )
 
     def _fetch_grasp_state(self, s=1.0):
         grasping_states = np.zeros((1, 21))
@@ -236,6 +279,53 @@ class GraspInferenceAgent:
         action_tensor = self.player.get_action(obs_tensor, is_deterministic=True)
         return action_tensor.cpu().numpy()
 
+    def _phase_features(self, counter):
+        env = self.config["task"]["env"]
+        if not self.include_phase_feature:
+            return None
+
+        if counter is None:
+            return np.array([[0.0, 1.0]], dtype=np.float32)
+
+        phase_period = float(env["phase_period"])
+        omega = 2 * np.pi / phase_period
+        phase_angle = (counter - 1) * omega / 20.0
+        return np.array([[np.sin(phase_angle), np.cos(phase_angle)]], dtype=np.float32)
+
+    def _object_scale_feature(self):
+        if not self.include_obj_scale_feature:
+            return None
+        base_obj_scale = float(self.config["task"]["env"].get("baseObjScale", 1.0))
+        return np.array([[base_obj_scale]], dtype=np.float32)
+
+    def _append_observation_frame(self, obs_buf, current_obs, target, counter=None):
+        env = self.config["task"]["env"]
+        obs_buf = np.concatenate([obs_buf, current_obs.copy()], axis=-1)
+        if env["include_targets"]:
+            obs_buf = np.concatenate([obs_buf, target.copy()], axis=-1)
+        if env["include_obj_pose"]:
+            obs_buf = np.concatenate([obs_buf, self.external_target_position], axis=-1)
+
+        phase = self._phase_features(counter)
+        if phase is not None:
+            obs_buf = np.concatenate([obs_buf, phase], axis=-1)
+
+        obj_scale = self._object_scale_feature()
+        if obj_scale is not None:
+            obs_buf = np.concatenate([obs_buf, obj_scale], axis=-1)
+
+        return obs_buf
+
+    def _align_observation_size(self, obs_buf):
+        expected_num_obs = int(self.expected_num_obs or obs_buf.shape[1])
+        current_dim = obs_buf.shape[1]
+        if current_dim == expected_num_obs:
+            return obs_buf
+        if current_dim < expected_num_obs:
+            padding = np.zeros((obs_buf.shape[0], expected_num_obs - current_dim), dtype=np.float32)
+            return np.concatenate([obs_buf, padding], axis=-1)
+        return obs_buf[:, :expected_num_obs]
+
     def infer(self, external_target_position):
         self.external_target_position = np.asarray(external_target_position, dtype=np.float32).reshape(1, 3)
 
@@ -253,15 +343,11 @@ class GraspInferenceAgent:
         num_append_iters = 3 if env["include_history"] else 1
 
         for _ in range(num_append_iters):
-            obs_buf = np.concatenate([obs_buf, cur_obs_buf.copy()], axis=-1)
-            if env["include_targets"]:
-                obs_buf = np.concatenate([obs_buf, prev_target.copy()], axis=-1)
-            if env["include_obj_pose"]:
-                obs_buf = np.concatenate([obs_buf, self.external_target_position], axis=-1)
+            obs_buf = self._append_observation_frame(obs_buf, cur_obs_buf, prev_target)
 
         if "obs_mask" in env:
             obs_buf = obs_buf * np.array(env["obs_mask"])[None, :]
-        obs_buf = obs_buf.astype(np.float32)
+        obs_buf = self._align_observation_size(obs_buf).astype(np.float32)
 
         if self.player.is_rnn:
             self.player.init_rnn()
@@ -281,7 +367,13 @@ class GraspInferenceAgent:
             prev_target = target.copy()
             commands = target[0]
 
-            if counter > 600:
+            if counter == 1 or counter % 100 == 0:
+                print(
+                    f"Inference step {counter}: target[:5]={np.round(commands[:5], 6).tolist()} "
+                    f"obj={np.round(self.external_target_position.reshape(3), 6).tolist()}"
+                )
+
+            if counter >= self.max_inference_steps:
                 print("Inference time: {:.4f} seconds".format(time.time() - start_time))
                 return commands[:5].copy()
 
@@ -293,14 +385,10 @@ class GraspInferenceAgent:
             else:
                 obs_buf = np.zeros((1, 0), dtype=np.float32)
 
-            obs_buf = np.concatenate([obs_buf, cur_obs_buf.copy()], axis=-1)
-            if env["include_targets"]:
-                obs_buf = np.concatenate([obs_buf, target.copy()], axis=-1)
-            if env["include_obj_pose"]:
-                obs_buf = np.concatenate([obs_buf, self.external_target_position], axis=-1)
+            obs_buf = self._append_observation_frame(obs_buf, cur_obs_buf, target, counter=counter)
             if "obs_mask" in env:
                 obs_buf = obs_buf * np.array(env["obs_mask"])[None, :]
-            obs_buf = obs_buf.astype(np.float32)
+            obs_buf = self._align_observation_size(obs_buf).astype(np.float32)
 
     def reorder(self, data):
         data = as_row(data)
@@ -340,12 +428,12 @@ FRUIT_GRASP = np.array([
 
 
 def execute_bottle_grasp_hand(leap):
-    wait_for_joint_state(leap=leap, need_hand=True)
     lower = angle_transfer(BOTTLE_PREGRASP).reshape(1, 16)
-    current_hand = as_row(leap.raw_positions, 16)
+    current_hand = refresh_current_hand(leap)
     pregrasp_action = scale_action(current_hand, lower, 5)
 
-    leap.command_joint_position(pregrasp_action, 0.4)
+    if not leap.command_joint_position(pregrasp_action, 0.4):
+        raise RuntimeError("Failed to publish bottle pregrasp hand trajectory")
     time.sleep(5 * 0.4 + 1.0)
 
     upper = angle_transfer(BOTTLE_GRASP).reshape(1, 16)
@@ -356,12 +444,12 @@ def execute_bottle_grasp_hand(leap):
 
 
 def execute_fruit_grasp_hand(leap):
-    wait_for_joint_state(leap=leap, need_hand=True)
     lower = angle_transfer(FRUIT_PREGRASP).reshape(1, 16)
-    current_hand = as_row(leap.raw_positions, 16)
+    current_hand = refresh_current_hand(leap)
     pregrasp_action = scale_action(current_hand, lower, 5)
 
-    leap.command_joint_position(pregrasp_action, 0.4)
+    if not leap.command_joint_position(pregrasp_action, 0.4):
+        raise RuntimeError("Failed to publish fruit pregrasp hand trajectory")
     time.sleep(5 * 0.4 + 1.0)
 
     upper = angle_transfer(FRUIT_GRASP).reshape(1, 16)
@@ -372,29 +460,26 @@ def execute_fruit_grasp_hand(leap):
 
 
 def execute_bottle_release(leap, arm):
-    wait_for_joint_state(leap=leap, arm=arm, need_hand=True, need_arm=True)
     arm_zero = np.zeros((1, 6), dtype=float)
     smooth_arm_to_current_target(arm, arm_zero, scale=10, speed=0.5, extra_wait=1.0)
 
-    wait_for_joint_state(leap=leap, need_hand=True)
     hand_zero = np.zeros((1, 16), dtype=float)
-    hand_loose = scale_action(as_row(leap.raw_positions, 16), hand_zero, 1)
-    leap.command_joint_position(hand_loose, 3.0)
+    hand_loose = scale_action(refresh_current_hand(leap), hand_zero, 1)
+    if not leap.command_joint_position(hand_loose, 3.0):
+        raise RuntimeError("Failed to publish bottle hand release trajectory")
     time.sleep(4.0)
 
-    wait_for_joint_state(arm=arm, need_arm=True)
     smooth_arm_to_current_target(arm, arm_zero, scale=10, speed=0.2, extra_wait=2.0)
 
 
 def execute_fruit_release(leap, arm):
-    wait_for_joint_state(leap=leap, arm=arm, need_hand=True, need_arm=True)
     arm_zero = np.zeros((1, 6), dtype=float)
     smooth_arm_to_current_target(arm, arm_zero, scale=4, speed=0.5, extra_wait=3.0)
 
-    wait_for_joint_state(leap=leap, need_hand=True)
     hand_zero = np.zeros((1, 16), dtype=float)
-    hand_loose = scale_action(as_row(leap.raw_positions, 16), hand_zero, 1)
-    leap.command_joint_position(hand_loose, 3.0)
+    hand_loose = scale_action(refresh_current_hand(leap), hand_zero, 1)
+    if not leap.command_joint_position(hand_loose, 3.0):
+        raise RuntimeError("Failed to publish fruit hand release trajectory")
     time.sleep(3.0)
 
 

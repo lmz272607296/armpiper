@@ -71,7 +71,8 @@ def generate_launch_description():
         ],
         ros_arguments=['--log-level', log_level],
         remappings=[
-            ('joint_ctrl_single', '/joint_states')
+            ('joint_ctrl_single', '/joint_states'),
+            ('joint_trajectory_single', '/arm_controller/joint_trajectory')
         ]
     )
 

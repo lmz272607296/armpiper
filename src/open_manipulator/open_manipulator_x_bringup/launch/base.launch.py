@@ -57,18 +57,6 @@ def generate_launch_description():
         )
     )
 
-
-    # ################################################################### #
-    # #                  MODIFICATION START                             # #
-
-    declared_arguments.append(
-        DeclareLaunchArgument(
-            'arm_port_name',
-            default_value='/dev/ttyarm',
-            description='The port name for the arm hardware.'
-        )
-    )
-
     declared_arguments.append(
         DeclareLaunchArgument(
             'hand_port_name',
@@ -77,22 +65,13 @@ def generate_launch_description():
         )
     )
 
-    # #                  MODIFICATION END                               # #
-    # ################################################################### #
-
-
-
     start_rviz = LaunchConfiguration('start_rviz')
     prefix = LaunchConfiguration('prefix')
     use_sim = LaunchConfiguration('use_sim')
     use_fake_hardware = LaunchConfiguration('use_fake_hardware')
     fake_sensor_commands = LaunchConfiguration('fake_sensor_commands')
 
-
-    # ### MODIFICATION START ###
-    arm_port_name = LaunchConfiguration('arm_port_name')
     hand_port_name = LaunchConfiguration('hand_port_name')
-    # ### MODIFICATION END ###
 
     urdf_file = Command(
         [
@@ -118,14 +97,8 @@ def generate_launch_description():
             'fake_sensor_commands:=',
             fake_sensor_commands,
             ' ',
-
-            # ### MODIFICATION START ###
-            'arm_port_name:=',
-            arm_port_name,
-            ' ',
             'hand_port_name:=',
             hand_port_name,
-            # ### MODIFICATION END ###
         ]
     )
 
@@ -182,48 +155,18 @@ def generate_launch_description():
         output='screen',
     )
 
-    # ################################################################### #
-    # #                  MODIFICATION START                             # #
-
-
-    arm_controller_spawner = Node(
-        package='controller_manager',
-        executable='spawner',
-        arguments=['arm_controller'],
-        output='screen',
-    )
-
-
-
     hand_controller_spawner = Node(
         package='controller_manager',
         executable='spawner',
         arguments=['hand_controller', '-c', '/controller_manager'],
         output='screen',
     )
-
-    # #                  MODIFICATION END                               # #
-    # ################################################################### #
-
-
     delay_rviz_after_joint_state_broadcaster_spawner = RegisterEventHandler(
         event_handler=OnProcessExit(
             target_action=joint_state_broadcaster_spawner,
             on_exit=[rviz_node],
         )
     )
-
-    delay_arm_controller_spawner_after_joint_state_broadcaster_spawner = \
-        RegisterEventHandler(
-            event_handler=OnProcessExit(
-                target_action=joint_state_broadcaster_spawner,
-                on_exit=[arm_controller_spawner],
-            )
-        )
-    
-
-    # ################################################################### #
-    # #                  MODIFICATION START                             # #
 
     delay_hand_controller_spawner_after_joint_state_broadcaster_spawner = \
         RegisterEventHandler(
@@ -232,18 +175,12 @@ def generate_launch_description():
                 on_exit=[hand_controller_spawner],
             )
         )
-    
-    # #                  MODIFICATION END                               # #
-    # ################################################################### #
-
-
 
     nodes = [
         control_node,
         robot_state_pub_node,
         joint_state_broadcaster_spawner,
         delay_rviz_after_joint_state_broadcaster_spawner,
-        delay_arm_controller_spawner_after_joint_state_broadcaster_spawner,
         delay_hand_controller_spawner_after_joint_state_broadcaster_spawner
     ]
 

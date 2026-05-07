@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
 
 import json
+import os
 import queue
+import signal
 import subprocess
 import sys
 import threading
@@ -16,6 +18,19 @@ from std_msgs.msg import String
 BOTTLE = 'bottle'
 FRUIT = 'fruit'
 OBJECT_TYPE_TOPIC = '/grasp_object_type'
+ROTATION_ACTION = 'action5_rot'
+ACTION_STOP_TOPIC = '/action_stop'
+
+BASE_POSITION_LIMITS = {
+    BOTTLE: {
+        'x': (0.55, 0.65),
+        'y': (-0.25, 0.25),
+    },
+    FRUIT: {
+        'x': (0.45, 0.70),
+        'y': (-0.15, 0.15),
+    },
+}
 
 
 def normalize_object_keyword(value):
@@ -27,6 +42,9 @@ def normalize_object_keyword(value):
         FRUIT: FRUIT,
         'furit': FRUIT,
         'cube': FRUIT,
+        'block': FRUIT,
+        'square': FRUIT,
+        '方块': FRUIT,
         'orange': FRUIT,
         'apple': FRUIT,
     }
@@ -38,7 +56,7 @@ class MasterNode(Node):
         super().__init__('master_node')
 
         self.declare_parameter('signal_topic', '/recognized_signal')
-        self.declare_parameter('detection_topic', '/yolo_3d_detections_json')
+        self.declare_parameter('detection_topic', '/yolo_3d_detections_base_json')
         self.declare_parameter('status_topic', '/task_status')
         self.declare_parameter('arm_action_topic', '/arm_action_command')
         self.declare_parameter('grasp_pose_topic', '/grasp_target_pose')
@@ -49,6 +67,8 @@ class MasterNode(Node):
         self.declare_parameter('cache_duration', 3.0)
         self.declare_parameter('detection_timeout_sec', 3.0)
         self.declare_parameter('move_step_m', 0.02)
+        self.declare_parameter('debug_grasp_mode', False)
+        self.declare_parameter('action_log_to_console', True)
 
         signal_topic = self.get_parameter('signal_topic').value
         detection_topic = self.get_parameter('detection_topic').value
@@ -62,12 +82,28 @@ class MasterNode(Node):
         self.cache_duration = float(self.get_parameter('cache_duration').value)
         self.detection_timeout_sec = float(self.get_parameter('detection_timeout_sec').value)
         self.move_step_m = float(self.get_parameter('move_step_m').value)
+        self.debug_grasp_mode = bool(self.get_parameter('debug_grasp_mode').value)
+        self.action_log_to_console = bool(self.get_parameter('action_log_to_console').value)
+        self.debug_grasp_position = {
+            'x': 0.55,
+            'y': 0.0,
+            'z': 0.0,
+        }
+        self.debug_grasp_positions = {
+            BOTTLE: self.debug_grasp_position,
+            FRUIT: {
+                'x': 0.55,
+                'y': 0.0,
+                'z': 0.0,
+            },
+        }
 
         self.latest_detections = {}
         self.last_detection_msg_time = 0.0
         self.selected_object = None
         self.pending_action = None
         self.pending_grasp_position = None
+        self.active_grasp_request = None
         self.holding_object = False
         self.held_object = None
         self.processes = {}
@@ -79,6 +115,8 @@ class MasterNode(Node):
         self.arm_action_pub = self.create_publisher(String, arm_action_topic, 10)
         self.grasp_pose_pub = self.create_publisher(PoseStamped, grasp_pose_topic, 10)
         self.object_type_pub = self.create_publisher(String, self.object_type_topic, 10)
+        self.action_stop_pub = self.create_publisher(String, ACTION_STOP_TOPIC, 10)
+        self.grasp_wait_timer = self.create_timer(0.1, self.grasp_wait_timer_callback)
 
         self.signal_map = {
             '1': 'front',
@@ -107,6 +145,11 @@ class MasterNode(Node):
             f'中控节点已启动，订阅 {signal_topic}；1-4=前后左右，5=旋转，6=抓取，'
             f'7=释放，8=bottle，9=fruit，10=复位。'
         )
+        if self.debug_grasp_mode:
+            self.get_logger().warn(
+                '抓取调试模式已启用：抓取时将跳过 YOLO 检测，固定发送 '
+                'X=0.55, Y=0.00, Z=0.00。'
+            )
         if self.enable_keyboard_input and sys.stdin.isatty():
             self.keyboard_timer = self.create_timer(0.05, self.keyboard_timer_callback)
             self.keyboard_thread = threading.Thread(target=self.keyboard_loop, daemon=True)
@@ -194,13 +237,32 @@ class MasterNode(Node):
 
         self.latest_detections = grouped
 
+        if self.active_grasp_request is not None:
+            self.try_complete_active_grasp(grouped)
+
+    def grasp_wait_timer_callback(self):
+        if self.active_grasp_request is None:
+            return
+
+        now = time.time()
+        if now < self.active_grasp_request['deadline']:
+            return
+
+        request = self.active_grasp_request
+        self.active_grasp_request = None
+        prefix = self.position_text(request.get('position_label'))
+        self.publish_status(
+            f"拒绝抓取：等待 {self.detection_timeout_sec:.1f} 秒后仍未收到有效的"
+            f"{prefix}{self.target_text[request['object_type']]}坐标。"
+        )
+
     def handle_token(self, token):
         if token in ['front', 'back', 'left', 'right']:
             self.handle_direction(token)
             return
         if token == 'rotate':
             self.clear_pending()
-            self.launch_action('action5_rot')
+            self.launch_action(ROTATION_ACTION)
             return
         if token == 'grasp':
             self.handle_grasp_signal()
@@ -213,10 +275,8 @@ class MasterNode(Node):
             return
         if token == 'reset':
             self.clear_pending()
-            self.launch_action('action1_4_move')
-            self.wait_for_subscribers(self.arm_action_pub, '/arm_action_command')
-            self.publish_arm_action({'type': 'reset'})
-            self.publish_status('已发送复位指令。')
+            self.launch_action('action8_rst')
+            self.publish_status('已启动复位节点 action8_rst。')
             return
 
         self.publish_status(f'未知信号: {token}')
@@ -244,14 +304,12 @@ class MasterNode(Node):
             self.publish_status('当前已经处于抓取状态，必须先发送释放指令后才能再次抓取。')
             return
 
+        self.clear_pending()
+        self.selected_object = None
         self.launch_action('action6_gsp')
-        if self.selected_object is None:
-            self.pending_action = 'grasp'
-            self.pending_grasp_position = None
-            self.publish_status('已启动抓取节点，请继续发送 8(bottle) 或 9(fruit) 选择物体。')
-            return
-
-        self.execute_grasp(self.selected_object, self.pending_grasp_position)
+        self.pending_action = 'grasp'
+        self.pending_grasp_position = None
+        self.publish_status('已启动抓取节点，请继续发送 8(bottle) 或 9(fruit) 选择物体。')
 
     def handle_release_signal(self):
         self.launch_action('action7_flat')
@@ -275,25 +333,54 @@ class MasterNode(Node):
             self.execute_release(object_type)
 
     def execute_grasp(self, object_type, position_label=None):
-        if not self.detection_is_fresh():
-            self.publish_status(
-                f"拒绝抓取：{self.detection_timeout_sec:.1f} 秒内未收到 YOLO 3D 检测消息，"
-                "请确认相机和 ultimate_yolo_node_cpu 正常运行。"
-            )
-            return False
-
-        detection = self.select_detection(object_type, position_label)
-        if detection is None:
+        if self.debug_grasp_mode:
+            detection = {
+                'position': self.debug_grasp_positions[object_type],
+                'position_label': position_label,
+                'confidence': 1.0,
+            }
+            return self.publish_grasp_target(object_type, detection)
+        else:
+            self.launch_action('action6_gsp')
+            self.active_grasp_request = {
+                'object_type': object_type,
+                'position_label': position_label,
+                'deadline': time.time() + self.detection_timeout_sec,
+            }
             prefix = self.position_text(position_label)
-            self.publish_status(f"未找到可抓取的{prefix}{self.target_text[object_type]}。")
+            self.publish_status(
+                f"等待 {self.detection_timeout_sec:.1f} 秒内的新 YOLO 3D 检测，"
+                f"用于抓取{prefix}{self.target_text[object_type]}。"
+            )
+            return True
+
+    def try_complete_active_grasp(self, grouped):
+        if self.active_grasp_request is None:
             return False
 
+        request = self.active_grasp_request
+        if time.time() > request['deadline']:
+            self.grasp_wait_timer_callback()
+            return False
+
+        detection = self.select_detection_from_grouped(
+            grouped,
+            request['object_type'],
+            request.get('position_label'),
+        )
+        if detection is None:
+            return False
+
+        self.active_grasp_request = None
+        return self.publish_grasp_target(request['object_type'], detection)
+
+    def publish_grasp_target(self, object_type, detection):
         self.launch_action('action6_gsp')
         self.wait_for_subscribers(self.object_type_pub, self.object_type_topic)
         self.wait_for_subscribers(self.grasp_pose_pub, '/grasp_target_pose')
         self.publish_object_type(object_type)
 
-        pos = detection['position']
+        pos = self.clamp_detection_position(object_type, detection['position'])
         grasp_pose = PoseStamped()
         grasp_pose.header.stamp = self.get_clock().now().to_msg()
         grasp_pose.header.frame_id = object_type
@@ -308,8 +395,9 @@ class MasterNode(Node):
         self.held_object = object_type
         self.clear_pending()
         prefix = self.position_text(detection.get('position_label'))
+        mode_text = '调试模式固定' if self.debug_grasp_mode else ''
         self.publish_status(
-            f"已向 action6_gsp 发送抓取{prefix}{self.target_text[object_type]}目标："
+            f"已向 action6_gsp 发送抓取{prefix}{self.target_text[object_type]}{mode_text}目标："
             f"X={pos['x']:.2f}, Y={pos['y']:.2f}, Z={pos['z']:.2f}，"
             f"置信度={detection['confidence']:.1%}。"
         )
@@ -362,35 +450,136 @@ class MasterNode(Node):
 
         return max(candidates, key=lambda item: item['confidence'])
 
+    def select_detection_from_grouped(self, grouped, object_type, position_label=None):
+        candidates = grouped.get(object_type, [])
+        if position_label:
+            candidates = [
+                detection for detection in candidates
+                if detection.get('position_label') == position_label
+            ]
+        if not candidates:
+            return None
+
+        if not position_label:
+            middle_candidates = [
+                detection for detection in candidates
+                if detection.get('position_label') == 'middle'
+            ]
+            if middle_candidates:
+                return middle_candidates[0]
+
+            centered_candidates = [
+                detection for detection in candidates
+                if detection.get('center_pixel')
+            ]
+            if centered_candidates:
+                return min(centered_candidates, key=lambda item: abs(item['center_pixel'][0] - 320))
+
+        return candidates[0]
+
+    def clamp_detection_position(self, object_type, position):
+        limits = BASE_POSITION_LIMITS.get(object_type, {})
+        clamped = dict(position)
+        for axis, (low, high) in limits.items():
+            value = clamped.get(axis)
+            if value is None:
+                continue
+            clamped[axis] = min(max(float(value), low), high)
+
+        return clamped
+
     def detection_is_fresh(self):
         if self.last_detection_msg_time <= 0.0:
             return False
         return time.time() - self.last_detection_msg_time <= self.detection_timeout_sec
 
     def launch_action(self, executable):
+        if executable == ROTATION_ACTION:
+            self.broadcast_action_stop(ROTATION_ACTION)
+            self.stop_process(ROTATION_ACTION, '重启旋转动作')
+        else:
+            self.broadcast_action_stop(ROTATION_ACTION)
+            self.stop_process(ROTATION_ACTION, f'收到新动作 {executable}')
+
+        self.cleanup_finished_processes()
         process = self.processes.get(executable)
         if process is not None and process.poll() is None:
             self.publish_status(f'{executable} 已在运行。')
             return
 
+        command = ['ros2', 'run', self.package_name, executable]
+        if executable == 'action1_4_move':
+            command.extend(['--ros-args', '-p', 'exit_after_action:=true'])
+
         try:
+            stdout_target = None if self.action_log_to_console else subprocess.DEVNULL
+            stderr_target = None if self.action_log_to_console else subprocess.DEVNULL
             self.processes[executable] = subprocess.Popen(
-                ['ros2', 'run', self.package_name, executable],
-                stdout=subprocess.DEVNULL,
-                stderr=subprocess.DEVNULL,
+                command,
+                stdout=stdout_target,
+                stderr=stderr_target,
                 start_new_session=True,
             )
             self.publish_status(f'已启动 {executable}。')
         except Exception as exc:
             self.publish_status(f'启动 {executable} 失败: {exc}')
 
-    def wait_for_subscribers(self, publisher, topic_name, timeout_sec=2.0):
+    def cleanup_finished_processes(self):
+        for executable, process in list(self.processes.items()):
+            if process.poll() is not None:
+                self.processes.pop(executable, None)
+
+    def stop_process(self, executable, reason='', timeout_sec=2.0):
+        process = self.processes.get(executable)
+        if process is None:
+            return False
+        if process.poll() is not None:
+            self.processes.pop(executable, None)
+            return False
+
+        suffix = f'：{reason}' if reason else ''
+        self.publish_status(f'正在停止 {executable}{suffix}。')
+        if executable == ROTATION_ACTION:
+            self.broadcast_action_stop(ROTATION_ACTION)
+            time.sleep(0.15)
+        try:
+            os.killpg(process.pid, signal.SIGTERM)
+            process.wait(timeout=timeout_sec)
+        except ProcessLookupError:
+            pass
+        except subprocess.TimeoutExpired:
+            self.publish_status(f'{executable} 未及时退出，强制终止该动作节点。')
+            try:
+                os.killpg(process.pid, signal.SIGKILL)
+                process.wait(timeout=1.0)
+            except ProcessLookupError:
+                pass
+            except Exception as exc:
+                self.publish_status(f'强制终止 {executable} 失败: {exc}')
+                return False
+        except Exception as exc:
+            self.publish_status(f'停止 {executable} 失败: {exc}')
+            return False
+        finally:
+            if process.poll() is not None:
+                self.processes.pop(executable, None)
+
+        return True
+
+    def shutdown_actions(self):
+        self.broadcast_action_stop(ROTATION_ACTION)
+        time.sleep(0.15)
+        for executable in list(self.processes.keys()):
+            self.stop_process(executable, 'master_node 退出', timeout_sec=1.5)
+
+    def wait_for_subscribers(self, publisher, topic_name, timeout_sec=5.0):
         deadline = time.time() + timeout_sec
         while time.time() < deadline and rclpy.ok():
             count = publisher.get_subscription_count()
             if hasattr(publisher, 'get_intra_process_subscription_count'):
                 count += publisher.get_intra_process_subscription_count()
             if count > 0:
+                time.sleep(0.3)
                 return True
             time.sleep(0.05)
 
@@ -407,6 +596,11 @@ class MasterNode(Node):
         msg.data = json.dumps(payload)
         self.arm_action_pub.publish(msg)
 
+    def broadcast_action_stop(self, action_name):
+        msg = String()
+        msg.data = action_name
+        self.action_stop_pub.publish(msg)
+
     def publish_status(self, status):
         msg = String()
         msg.data = status
@@ -416,6 +610,7 @@ class MasterNode(Node):
     def clear_pending(self):
         self.pending_action = None
         self.pending_grasp_position = None
+        self.active_grasp_request = None
 
     def position_text(self, position_label):
         return {'left': '左边的', 'middle': '中间的', 'right': '右边的'}.get(position_label, '')
@@ -429,6 +624,7 @@ def main(args=None):
     except KeyboardInterrupt:
         pass
     finally:
+        node.shutdown_actions()
         if rclpy.ok():
             node.destroy_node()
             rclpy.shutdown()

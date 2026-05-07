@@ -1,0 +1,1 @@
+/home/lmz/armpiper/build/piper_msgs/ament_cmake_core/piper_msgsConfig-version.cmake

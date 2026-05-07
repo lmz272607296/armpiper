@@ -1,0 +1,1 @@
+/home/lmz/armpiper/src/piper_ros/piper_sim/piper_gazebo/scripts/joint8_ctrl.py

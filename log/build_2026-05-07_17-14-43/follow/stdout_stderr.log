@@ -1,0 +1,25 @@
+running develop
+running egg_info
+creating follow.egg-info
+writing follow.egg-info/PKG-INFO
+writing dependency_links to follow.egg-info/dependency_links.txt
+writing entry points to follow.egg-info/entry_points.txt
+writing requirements to follow.egg-info/requires.txt
+writing top-level names to follow.egg-info/top_level.txt
+writing manifest file 'follow.egg-info/SOURCES.txt'
+reading manifest file 'follow.egg-info/SOURCES.txt'
+writing manifest file 'follow.egg-info/SOURCES.txt'
+running build_ext
+Creating /home/lmz/armpiper/install/follow/lib/python3.10/site-packages/follow.egg-link (link to .)
+Installing follow script to /home/lmz/armpiper/install/follow/lib/follow
+Installing pico script to /home/lmz/armpiper/install/follow/lib/follow
+
+Installed /home/lmz/armpiper/build/follow
+running symlink_data
+creating /home/lmz/armpiper/install/follow/share/ament_index
+creating /home/lmz/armpiper/install/follow/share/ament_index/resource_index
+creating /home/lmz/armpiper/install/follow/share/ament_index/resource_index/packages
+symbolically linking /home/lmz/armpiper/build/follow/resource/follow -> /home/lmz/armpiper/install/follow/share/ament_index/resource_index/packages
+symbolically linking /home/lmz/armpiper/build/follow/package.xml -> /home/lmz/armpiper/install/follow/share/follow
+symbolically linking /home/lmz/armpiper/build/follow/follow/pose_landmarker_full.task -> /home/lmz/armpiper/install/follow/share/follow
+symbolically linking /home/lmz/armpiper/build/follow/follow/hand_landmarker.task -> /home/lmz/armpiper/install/follow/share/follow

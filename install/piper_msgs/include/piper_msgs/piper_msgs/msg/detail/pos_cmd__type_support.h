@@ -1,0 +1,1 @@
+/home/lmz/armpiper/build/piper_msgs/rosidl_generator_c/piper_msgs/msg/detail/pos_cmd__type_support.h

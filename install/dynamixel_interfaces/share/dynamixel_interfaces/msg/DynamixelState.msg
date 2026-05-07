@@ -1,0 +1,1 @@
+/home/lmz/armpiper/src/dynamixel_interfaces/msg/DynamixelState.msg

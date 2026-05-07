@@ -7,7 +7,6 @@
   <xacro:arg name="fake_sensor_commands" default="false" />
 
   <!-- 端口定义 -->
-  <xacro:arg name="arm_port_name" default="/dev/ttyarm" />
   <xacro:arg name="hand_port_name" default="/dev/ttyhand" />
 
   <!-- Import Rviz colors -->
@@ -27,7 +26,6 @@
     prefix="$(arg prefix)" use_sim="$(arg use_sim)"
     use_fake_hardware="$(arg use_fake_hardware)"
     fake_sensor_commands="$(arg fake_sensor_commands)"
-    arm_port_name="$(arg arm_port_name)"
     hand_port_name="$(arg hand_port_name)"/>
 
 

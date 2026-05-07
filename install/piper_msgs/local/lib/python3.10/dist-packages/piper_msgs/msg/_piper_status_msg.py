@@ -1,0 +1,1 @@
+/home/lmz/armpiper/build/piper_msgs/rosidl_generator_py/piper_msgs/msg/_piper_status_msg.py

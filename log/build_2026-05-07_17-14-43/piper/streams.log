@@ -1,0 +1,29 @@
+[2.575s] Invoking command in '/home/lmz/armpiper/build/piper': PYTHONPATH=/home/lmz/armpiper/build/piper/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/home/lmz/armpiper/install/piper/lib/python3.10/site-packages:${PYTHONPATH} /usr/bin/python3 -W ignore:setup.py install is deprecated -W ignore:easy_install command is deprecated setup.py develop --editable --build-directory /home/lmz/armpiper/build/piper/build --no-deps symlink_data
+[2.963s] running develop
+[3.213s] running egg_info
+[3.213s] creating piper.egg-info
+[3.213s] writing piper.egg-info/PKG-INFO
+[3.213s] writing dependency_links to piper.egg-info/dependency_links.txt
+[3.213s] writing entry points to piper.egg-info/entry_points.txt
+[3.213s] writing requirements to piper.egg-info/requires.txt
+[3.214s] writing top-level names to piper.egg-info/top_level.txt
+[3.214s] writing manifest file 'piper.egg-info/SOURCES.txt'
+[3.214s] reading manifest file 'piper.egg-info/SOURCES.txt'
+[3.215s] writing manifest file 'piper.egg-info/SOURCES.txt'
+[3.239s] running build_ext
+[3.239s] Creating /home/lmz/armpiper/install/piper/lib/python3.10/site-packages/piper.egg-link (link to .)
+[3.240s] Installing piper_read_slave_joint script to /home/lmz/armpiper/install/piper/lib/piper
+[3.240s] Installing piper_single_ctrl script to /home/lmz/armpiper/install/piper/lib/piper
+[3.240s] 
+[3.240s] Installed /home/lmz/armpiper/build/piper
+[3.240s] running symlink_data
+[3.240s] creating /home/lmz/armpiper/install/piper/share/ament_index
+[3.240s] creating /home/lmz/armpiper/install/piper/share/ament_index/resource_index
+[3.240s] creating /home/lmz/armpiper/install/piper/share/ament_index/resource_index/packages
+[3.240s] symbolically linking /home/lmz/armpiper/build/piper/resource/piper -> /home/lmz/armpiper/install/piper/share/ament_index/resource_index/packages
+[3.241s] symbolically linking /home/lmz/armpiper/build/piper/package.xml -> /home/lmz/armpiper/install/piper/share/piper
+[3.241s] creating /home/lmz/armpiper/install/piper/share/piper/launch
+[3.241s] symbolically linking /home/lmz/armpiper/build/piper/launch/start_two_piper.launch.py -> /home/lmz/armpiper/install/piper/share/piper/launch
+[3.241s] symbolically linking /home/lmz/armpiper/build/piper/launch/start_single_piper.launch.py -> /home/lmz/armpiper/install/piper/share/piper/launch
+[3.241s] symbolically linking /home/lmz/armpiper/build/piper/launch/start_single_piper_rviz.launch.py -> /home/lmz/armpiper/install/piper/share/piper/launch
+[3.318s] Invoked command in '/home/lmz/armpiper/build/piper' returned '0': PYTHONPATH=/home/lmz/armpiper/build/piper/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/home/lmz/armpiper/install/piper/lib/python3.10/site-packages:${PYTHONPATH} /usr/bin/python3 -W ignore:setup.py install is deprecated -W ignore:easy_install command is deprecated setup.py develop --editable --build-directory /home/lmz/armpiper/build/piper/build --no-deps symlink_data
