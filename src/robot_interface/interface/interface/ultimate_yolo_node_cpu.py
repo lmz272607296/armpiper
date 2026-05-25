@@ -6,12 +6,14 @@ from rclpy.qos import QoSProfile, QoSReliabilityPolicy
 import message_filters
 from sensor_msgs.msg import Image, CameraInfo
 from std_msgs.msg import String
+from geometry_msgs.msg import Pose, PoseStamped
 import cv_bridge
 import image_geometry
 import sys
 import time
 import os
 import json
+import math
 import numpy as np
 import cv2
 
@@ -37,6 +39,38 @@ def normalize_object_keyword(value):
     }
     return aliases.get(normalized, normalized)
 
+
+def quaternion_to_matrix(quat_msg):
+    x = float(quat_msg.x)
+    y = float(quat_msg.y)
+    z = float(quat_msg.z)
+    w = float(quat_msg.w)
+    norm = math.sqrt(x * x + y * y + z * z + w * w)
+    if norm < 1e-9:
+        return np.eye(3)
+
+    x /= norm
+    y /= norm
+    z /= norm
+    w /= norm
+    return np.array([
+        [1.0 - 2.0 * (y * y + z * z), 2.0 * (x * y - z * w), 2.0 * (x * z + y * w)],
+        [2.0 * (x * y + z * w), 1.0 - 2.0 * (x * x + z * z), 2.0 * (y * z - x * w)],
+        [2.0 * (x * z - y * w), 2.0 * (y * z + x * w), 1.0 - 2.0 * (x * x + y * y)],
+    ], dtype=float)
+
+
+def pose_to_matrix(pose_msg):
+    transform = np.eye(4)
+    transform[:3, :3] = quaternion_to_matrix(pose_msg.orientation)
+    transform[:3, 3] = np.array([
+        pose_msg.position.x,
+        pose_msg.position.y,
+        pose_msg.position.z,
+    ], dtype=float)
+    return transform
+
+
 class UltimateYoloNodeCPU(Node):
     def __init__(self):
         super().__init__('ultimate_yolo_node_cpu')
@@ -53,6 +87,14 @@ class UltimateYoloNodeCPU(Node):
         self.declare_parameter('max_det', 30)
         self.declare_parameter('enable_display', True)
         self.declare_parameter('log_interval_sec', 2.0)
+        self.declare_parameter('hand_eye_matrix_file', '/home/lmz/armpiper/hand_eye_calibration.txt')
+        self.declare_parameter('apply_hand_eye_transform', True)
+        self.declare_parameter('end_pose_topic', '/end_pose')
+        self.declare_parameter('end_pose_stamped_topic', '/end_pose_stamped')
+        self.declare_parameter('prefer_stamped_end_pose', True)
+        self.declare_parameter('max_end_pose_age_sec', 1.0)
+        self.declare_parameter('base_frame_id', 'base_link')
+        self.declare_parameter('flange_frame_id', 'link6')
 
         model_path = self.get_parameter('model_path').value
         self.conf_thres = self.get_parameter('conf_threshold').value
@@ -61,10 +103,23 @@ class UltimateYoloNodeCPU(Node):
         input_topic_depth = self.get_parameter('input_topic_depth').value
         input_topic_camera_info = self.get_parameter('input_topic_camera_info').value
         output_topic = self.get_parameter('output_topic').value
+        end_pose_topic = self.get_parameter('end_pose_topic').value
+        end_pose_stamped_topic = self.get_parameter('end_pose_stamped_topic').value
         self.imgsz = int(self.get_parameter('imgsz').value)
         self.max_det = int(self.get_parameter('max_det').value)
         self.enable_display = bool(self.get_parameter('enable_display').value)
         self.log_interval_sec = float(self.get_parameter('log_interval_sec').value)
+        hand_eye_matrix_file = self.get_parameter('hand_eye_matrix_file').value
+        self.apply_hand_eye_transform = bool(self.get_parameter('apply_hand_eye_transform').value)
+        self.prefer_stamped_end_pose = bool(self.get_parameter('prefer_stamped_end_pose').value)
+        self.max_end_pose_age_sec = float(self.get_parameter('max_end_pose_age_sec').value)
+        self.base_frame_id = self.get_parameter('base_frame_id').value
+        self.flange_frame_id = self.get_parameter('flange_frame_id').value
+        self.hand_eye_transform = self.load_hand_eye_transform(hand_eye_matrix_file)
+        self.latest_base_to_flange = None
+        self.latest_end_pose_time = 0.0
+        self.latest_end_pose_source = None
+        self.last_pose_warn_time = 0.0
         self.last_log_time = 0.0
         
         try:
@@ -92,13 +147,86 @@ class UltimateYoloNodeCPU(Node):
            
         self.camera_info_sub = self.create_subscription(
             CameraInfo, input_topic_camera_info, self.camera_info_callback, qos_profile=qos_profile)
+        self.end_pose_sub = self.create_subscription(
+            Pose, end_pose_topic, self.end_pose_callback, 10)
+        self.end_pose_stamped_sub = self.create_subscription(
+            PoseStamped, end_pose_stamped_topic, self.end_pose_stamped_callback, 10)
            
         self.detection_pub = self.create_publisher(String, output_topic, 10)
         
         self.get_logger().info(
             f"YOLO 节点已初始化。发布 JSON 结果到: {output_topic}，"
-            f"imgsz={self.imgsz}, max_det={self.max_det}, enable_display={self.enable_display}"
+            f"imgsz={self.imgsz}, max_det={self.max_det}, enable_display={self.enable_display}, "
+            f"apply_hand_eye_transform={self.apply_hand_eye_transform}"
         )
+        self.get_logger().info(
+            f"实时末端位姿: {end_pose_stamped_topic} / {end_pose_topic}，"
+            f"按 {self.base_frame_id}->{self.flange_frame_id} 解释；输出 center_3d 坐标系为 {self.base_frame_id}"
+        )
+
+    def load_hand_eye_transform(self, matrix_file):
+        if not self.apply_hand_eye_transform:
+            self.get_logger().info("手眼坐标转换已禁用，将发布相机坐标系坐标")
+            return np.eye(4, dtype=float)
+
+        try:
+            transform = np.loadtxt(matrix_file, dtype=float)
+        except Exception as e:
+            self.get_logger().fatal(f"读取手眼标定矩阵失败: {matrix_file}, 错误: {e}")
+            raise e
+
+        if transform.shape != (4, 4):
+            raise ValueError(f"手眼标定矩阵必须是 4x4，当前形状: {transform.shape}")
+
+        self.get_logger().info(
+            f"已加载手眼标定矩阵 T_{self.flange_frame_id}_camera: {matrix_file}"
+        )
+        self.get_logger().info(
+            f"当前使用的手眼变换矩阵 T_{self.flange_frame_id}_camera:\n"
+            f"{np.array2string(transform, precision=10, suppress_small=False)}"
+        )
+        return transform
+
+    def transform_camera_to_robot(self, camera_point):
+        point_camera_h = np.array([camera_point[0], camera_point[1], camera_point[2], 1.0], dtype=float)
+        point_flange_h = self.hand_eye_transform @ point_camera_h
+
+        if self.latest_base_to_flange is None:
+            return None, point_flange_h[:3]
+
+        point_base_h = self.latest_base_to_flange @ point_flange_h
+        point_base_h[0] += 0.10  # 最终 x 坐标补偿 10cm
+        return point_base_h[:3], point_flange_h[:3]
+
+    def end_pose_callback(self, msg):
+        if self.prefer_stamped_end_pose and self.latest_end_pose_source == 'stamped':
+            if time.time() - self.latest_end_pose_time <= self.max_end_pose_age_sec:
+                return
+
+        self.latest_base_to_flange = pose_to_matrix(msg)
+        self.latest_end_pose_time = time.time()
+        self.latest_end_pose_source = 'pose'
+
+    def end_pose_stamped_callback(self, msg):
+        self.latest_base_to_flange = pose_to_matrix(msg.pose)
+        self.latest_end_pose_time = time.time()
+        self.latest_end_pose_source = 'stamped'
+        if msg.header.frame_id and msg.header.frame_id not in (self.base_frame_id, ''):
+            self.warn_pose_throttled(
+                f"收到 {self.get_parameter('end_pose_stamped_topic').value} frame_id={msg.header.frame_id}，"
+                f"本节点仍按 {self.base_frame_id}->{self.flange_frame_id} 位姿解释。"
+            )
+
+    def has_fresh_end_pose(self):
+        if self.latest_base_to_flange is None:
+            return False
+        return time.time() - self.latest_end_pose_time <= self.max_end_pose_age_sec
+
+    def warn_pose_throttled(self, text):
+        now = time.time()
+        if now - self.last_pose_warn_time >= self.log_interval_sec:
+            self.get_logger().warn(text)
+            self.last_pose_warn_time = now
 
     def camera_info_callback(self, msg):
         if self.camera_model is None:
@@ -110,6 +238,11 @@ class UltimateYoloNodeCPU(Node):
     def sync_callback(self, color_msg: Image, depth_msg: Image):
         if self.camera_model is None:
             self.get_logger().warn("相机内参模型尚未就绪，跳过此帧")
+            return
+        if self.apply_hand_eye_transform and not self.has_fresh_end_pose():
+            self.warn_pose_throttled(
+                f"尚未收到新鲜的 Piper 末端位姿，无法计算 {self.base_frame_id} 坐标，跳过此帧"
+            )
             return
            
         try:
@@ -167,11 +300,43 @@ class UltimateYoloNodeCPU(Node):
                     depth_m = self.depth_to_meters(float(np.median(valid_depths)), depth_msg.encoding)
                     if 0.1 < depth_m < 10.0:
                         ray = self.camera_model.projectPixelTo3dRay((center_x, center_y))
+                        camera_point = np.array([
+                            ray[0] * depth_m,
+                            ray[1] * depth_m,
+                            ray[2] * depth_m,
+                        ], dtype=float)
+                        if self.apply_hand_eye_transform:
+                            output_point, flange_point = self.transform_camera_to_robot(camera_point)
+                        else:
+                            output_point = camera_point
+                            flange_point = None
+
+                        if output_point is None:
+                            continue
+
                         detection["center_3d"] = {
-                            "x": ray[0] * depth_m,
-                            "y": ray[1] * depth_m,
-                            "z": ray[2] * depth_m,
+                            "x": float(output_point[0]),
+                            "y": float(output_point[1]),
+                            "z": float(output_point[2]),
                         }
+                        detection["center_3d_frame"] = self.base_frame_id if self.apply_hand_eye_transform else "camera"
+                        detection["transform_chain"] = (
+                            f"{self.base_frame_id}<-{self.flange_frame_id}<-camera"
+                            if self.apply_hand_eye_transform else "camera"
+                        )
+                        detection["end_pose_source"] = self.latest_end_pose_source if self.apply_hand_eye_transform else None
+                        detection["center_3d_camera"] = {
+                            "x": float(camera_point[0]),
+                            "y": float(camera_point[1]),
+                            "z": float(camera_point[2]),
+                        }
+                        if flange_point is not None:
+                            detection["center_3d_flange"] = {
+                                "x": float(flange_point[0]),
+                                "y": float(flange_point[1]),
+                                "z": float(flange_point[2]),
+                            }
+                            detection["center_3d_flange_frame"] = self.flange_frame_id
              
             detections_list.append(detection)
 
@@ -184,6 +349,7 @@ class UltimateYoloNodeCPU(Node):
         msg = String()
         msg.data = json_string
         self.detection_pub.publish(msg)
+        self.log_published_coordinates(detections_list)
         now = time.time()
         if now - self.last_log_time >= self.log_interval_sec:
             self.get_logger().info(f"已发布 {len(detections_list)} 个检测结果 (JSON)")
@@ -193,6 +359,23 @@ class UltimateYoloNodeCPU(Node):
         if encoding == '32FC1':
             return depth_value
         return depth_value / 1000.0
+
+    def log_published_coordinates(self, detections_list):
+        for detection in detections_list:
+            center_3d = detection.get("center_3d")
+            if center_3d is None:
+                continue
+
+            frame = detection.get("center_3d_frame", "unknown")
+            self.get_logger().info(
+                "发送坐标: "
+                f"instance={detection.get('instance_name')}, "
+                f"class={detection.get('class_name')}, "
+                f"frame={frame}, "
+                f"x={center_3d['x']:.6f}, "
+                f"y={center_3d['y']:.6f}, "
+                f"z={center_3d['z']:.6f}"
+            )
 
     def assign_position_labels(self, detections_list):
         detections_by_class = {}

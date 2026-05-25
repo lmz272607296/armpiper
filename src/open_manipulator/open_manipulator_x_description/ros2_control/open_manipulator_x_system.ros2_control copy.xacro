@@ -203,7 +203,7 @@
         <state_interface name="Torque Enable"/>
         <state_interface name="Present Input Voltage"/>
         <param name="Position P Gain">800</param>
-        <param name="Position I Gain">100</param>
+        <param name="Position I Gain">000</param>
         <param name="Position D Gain">100</param>
         <param name="Drive Mode">0</param>
       </gpio>
@@ -218,7 +218,7 @@
         <state_interface name="Torque Enable"/>
         <state_interface name="Present Input Voltage"/>
         <param name="Position P Gain">800</param>
-        <param name="Position I Gain">100</param>
+        <param name="Position I Gain">000</param>
         <param name="Position D Gain">100</param>
         <param name="Drive Mode">0</param>
       </gpio>
@@ -233,7 +233,7 @@
         <state_interface name="Torque Enable"/>
         <state_interface name="Present Input Voltage"/>
         <param name="Position P Gain">800</param>
-        <param name="Position I Gain">100</param>
+        <param name="Position I Gain">000</param>
         <param name="Position D Gain">100</param>
         <param name="Drive Mode">0</param>
       </gpio>
@@ -248,7 +248,7 @@
         <state_interface name="Torque Enable"/>
         <state_interface name="Present Input Voltage"/>
         <param name="Position P Gain">800</param>
-        <param name="Position I Gain">100</param>
+        <param name="Position I Gain">000</param>
         <param name="Position D Gain">100</param>
         <param name="Drive Mode">0</param>
       </gpio>
@@ -273,7 +273,7 @@
        <state_interface name="Torque Enable"/>
        <state_interface name="Present Input Voltage"/>
        <param name="Position P Gain">800</param>
-       <param name="Position I Gain">100</param>
+       <param name="Position I Gain">000</param>
        <param name="Position D Gain">100</param>
        <param name="Drive Mode">0</param>
       </gpio>
@@ -287,7 +287,7 @@
        <state_interface name="Torque Enable"/>
        <state_interface name="Present Input Voltage"/>
        <param name="Position P Gain">800</param>
-       <param name="Position I Gain">100</param>
+       <param name="Position I Gain">000</param>
        <param name="Position D Gain">100</param>
        <param name="Drive Mode">0</param>
       </gpio>
@@ -301,7 +301,7 @@
        <state_interface name="Torque Enable"/>
        <state_interface name="Present Input Voltage"/>
        <param name="Position P Gain">800</param>
-       <param name="Position I Gain">100</param>
+       <param name="Position I Gain">000</param>
        <param name="Position D Gain">100</param>
        <param name="Drive Mode">0</param>
       </gpio>
@@ -315,7 +315,7 @@
        <state_interface name="Torque Enable"/>
        <state_interface name="Present Input Voltage"/>
        <param name="Position P Gain">800</param>
-       <param name="Position I Gain">100</param>
+       <param name="Position I Gain">000</param>
        <param name="Position D Gain">100</param>
        <param name="Drive Mode">0</param>
       </gpio>
@@ -329,7 +329,7 @@
        <state_interface name="Torque Enable"/>
        <state_interface name="Present Input Voltage"/>
        <param name="Position P Gain">800</param>
-       <param name="Position I Gain">100</param>
+       <param name="Position I Gain">000</param>
        <param name="Position D Gain">100</param>
        <param name="Drive Mode">0</param>
       </gpio>
@@ -343,7 +343,7 @@
        <state_interface name="Torque Enable"/>
        <state_interface name="Present Input Voltage"/>
        <param name="Position P Gain">800</param>
-       <param name="Position I Gain">100</param>
+       <param name="Position I Gain">000</param>
        <param name="Position D Gain">100</param>
        <param name="Drive Mode">0</param>
       </gpio>
@@ -357,7 +357,7 @@
        <state_interface name="Torque Enable"/>
        <state_interface name="Present Input Voltage"/>
        <param name="Position P Gain">800</param>
-       <param name="Position I Gain">100</param>
+       <param name="Position I Gain">000</param>
        <param name="Position D Gain">100</param>
        <param name="Drive Mode">0</param>
       </gpio>
@@ -371,7 +371,7 @@
         <state_interface name="Torque Enable"/>
         <state_interface name="Present Input Voltage"/>
         <param name="Position P Gain">800</param>
-        <param name="Position I Gain">100</param>
+        <param name="Position I Gain">000</param>
         <param name="Position D Gain">100</param>
         <param name="Drive Mode">0</param>
       </gpio>
@@ -385,7 +385,7 @@
        <state_interface name="Torque Enable"/>
        <state_interface name="Present Input Voltage"/>
        <param name="Position P Gain">800</param>
-       <param name="Position I Gain">100</param>
+       <param name="Position I Gain">000</param>
        <param name="Position D Gain">100</param>
        <param name="Drive Mode">0</param>
       </gpio>
@@ -399,7 +399,7 @@
        <state_interface name="Torque Enable"/>
        <state_interface name="Present Input Voltage"/>
        <param name="Position P Gain">800</param>
-       <param name="Position I Gain">100</param>
+       <param name="Position I Gain">000</param>
        <param name="Position D Gain">100</param>
        <param name="Drive Mode">0</param>
       </gpio>
@@ -413,7 +413,7 @@
        <state_interface name="Torque Enable"/>
        <state_interface name="Present Input Voltage"/>
        <param name="Position P Gain">800</param>
-       <param name="Position I Gain">100</param>
+       <param name="Position I Gain">000</param>
        <param name="Position D Gain">100</param>
        <param name="Drive Mode">0</param>
       </gpio>

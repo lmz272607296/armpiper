@@ -18,10 +18,18 @@ from interface.motion_utils import (
     refresh_current_hand,
     scale_action,
 )
+from interface.hand_reset_utils import command_delayed_thumb_reset
 from interface.learning import amp_models, amp_network_builder, amp_players
 from interface.learning import no_isaac_amp_continuous
 from interface.utils.no_isaac_rlgames_utils import RLGPUAlgoObserver
 from interface.utils.reformat import omegaconf_to_dict
+
+
+ARM_SPEEDUP_FACTOR = 2.5
+RELEASE_HAND_SPEEDUP_FACTOR = 2.0
+BOTTLE_GRASP_HAND_SPEEDUP_FACTOR = 2.0
+FRUIT_GRASP_HAND_SPEEDUP_FACTOR = 1.5
+STAGE_DELAY_SEC = 0.2
 
 
 def angle_transfer(data):
@@ -57,6 +65,18 @@ def smooth_arm_to_current_target(arm, target, scale, speed, extra_wait=0.0):
         raise RuntimeError("Failed to publish arm trajectory")
     time.sleep(scale * speed + extra_wait)
     return trajectory
+
+
+def _wait_with_safety(duration_sec, safety_check=None, sleep_step_sec=0.05):
+    deadline = time.time() + max(0.0, float(duration_sec))
+    step = max(0.01, float(sleep_step_sec))
+    while True:
+        if safety_check is not None:
+            safety_check()
+        remaining = deadline - time.time()
+        if remaining <= 0.0:
+            return
+        time.sleep(min(step, remaining))
 
 
 def load_hand_eye_matrix(logger=None):
@@ -399,88 +419,121 @@ class GraspInferenceAgent:
 
 
 BOTTLE_PREGRASP = np.array([
-    209, 180, 190, 253,
+    209, 180, 190, 220,
     260, 279, 179, 236,
-    209, 180, 190, 253,
-    209, 180, 190, 253,
+    209, 180, 190, 220,
+    209, 180, 190, 220,
 ])
 
 BOTTLE_GRASP = np.array([
     272, 180, 190, 253,
-    260, 279, 179, 236,
-    272, 180, 190, 253,
-    272, 180, 190, 253,
+    260, 279, 200, 236,
+    287, 180, 190, 253,
+    287, 180, 190, 253,
 ])
 
 FRUIT_PREGRASP = np.array([
-    251, 180, 185, 232,
+    240, 180, 175, 235,
     219, 256, 190, 235,
-    251, 180, 185, 232,
-    260, 215, 200, 172,
+    240, 180, 175, 235,
+    250, 215, 210, 180,
 ])
 
 FRUIT_GRASP = np.array([
-    260, 180, 175, 222,
+    240, 180, 175, 235,
     219, 256, 255, 235,
-    260, 180, 175, 222,
-    260, 142, 200, 172,
+    240, 180, 175, 235,
+    260, 142, 220, 180,
 ])
 
-
-def execute_bottle_grasp_hand(leap):
+def execute_bottle_grasp_hand(leap, safety_check=None):
     lower = angle_transfer(BOTTLE_PREGRASP).reshape(1, 16)
     current_hand = refresh_current_hand(leap)
     pregrasp_action = scale_action(current_hand, lower, 5)
+    pregrasp_point_duration = 0.4 / BOTTLE_GRASP_HAND_SPEEDUP_FACTOR
 
-    if not leap.command_joint_position(pregrasp_action, 0.4):
+    if not leap.command_joint_position(pregrasp_action, pregrasp_point_duration):
         raise RuntimeError("Failed to publish bottle pregrasp hand trajectory")
-    time.sleep(5 * 0.4 + 1.0)
+    _wait_with_safety(5 * pregrasp_point_duration, safety_check=safety_check)
 
     upper = angle_transfer(BOTTLE_GRASP).reshape(1, 16)
     grasp_action = scale_action(lower, upper, 50)
+    grasp_point_duration = 0.1 / BOTTLE_GRASP_HAND_SPEEDUP_FACTOR
     for i in range(50):
-        leap.command_joint_position(grasp_action[i:i + 2, :], 0.1)
-        time.sleep(0.1)
+        if safety_check is not None:
+            safety_check()
+        leap.command_joint_position(grasp_action[i:i + 2, :], grasp_point_duration)
+        _wait_with_safety(grasp_point_duration, safety_check=safety_check)
 
 
-def execute_fruit_grasp_hand(leap):
+def execute_fruit_grasp_hand(leap, safety_check=None):
     lower = angle_transfer(FRUIT_PREGRASP).reshape(1, 16)
     current_hand = refresh_current_hand(leap)
     pregrasp_action = scale_action(current_hand, lower, 5)
+    pregrasp_point_duration = 0.4 / FRUIT_GRASP_HAND_SPEEDUP_FACTOR
 
-    if not leap.command_joint_position(pregrasp_action, 0.4):
+    if not leap.command_joint_position(pregrasp_action, pregrasp_point_duration):
         raise RuntimeError("Failed to publish fruit pregrasp hand trajectory")
-    time.sleep(5 * 0.4 + 1.0)
+    _wait_with_safety(5 * pregrasp_point_duration, safety_check=safety_check)
 
     upper = angle_transfer(FRUIT_GRASP).reshape(1, 16)
     grasp_action = scale_action(lower, upper, 19)
+    grasp_point_duration = 0.3 / FRUIT_GRASP_HAND_SPEEDUP_FACTOR
     for i in range(19):
-        leap.command_joint_position(grasp_action[i:i + 2, :], 0.3)
-        time.sleep(0.4)
+        if safety_check is not None:
+            safety_check()
+        leap.command_joint_position(grasp_action[i:i + 2, :], grasp_point_duration)
+        _wait_with_safety(grasp_point_duration, safety_check=safety_check)
 
 
 def execute_bottle_release(leap, arm):
     arm_zero = np.zeros((1, 6), dtype=float)
-    smooth_arm_to_current_target(arm, arm_zero, scale=10, speed=0.5, extra_wait=1.0)
+    smooth_arm_to_current_target(
+        arm,
+        arm_zero,
+        scale=10,
+        speed=0.5 / ARM_SPEEDUP_FACTOR,
+        extra_wait=STAGE_DELAY_SEC,
+    )
 
     hand_zero = np.zeros((1, 16), dtype=float)
-    hand_loose = scale_action(refresh_current_hand(leap), hand_zero, 1)
-    if not leap.command_joint_position(hand_loose, 3.0):
-        raise RuntimeError("Failed to publish bottle hand release trajectory")
-    time.sleep(4.0)
+    command_delayed_thumb_reset(
+        leap,
+        refresh_current_hand(leap),
+        hand_zero,
+        point_duration=3.0 / RELEASE_HAND_SPEEDUP_FACTOR,
+        trajectory_points=1,
+        extra_wait=STAGE_DELAY_SEC,
+    )
 
-    smooth_arm_to_current_target(arm, arm_zero, scale=10, speed=0.2, extra_wait=2.0)
+    smooth_arm_to_current_target(
+        arm,
+        arm_zero,
+        scale=10,
+        speed=0.2 / ARM_SPEEDUP_FACTOR,
+        extra_wait=STAGE_DELAY_SEC,
+    )
 
 
 def execute_fruit_release(leap, arm):
     arm_zero = np.zeros((1, 6), dtype=float)
-    smooth_arm_to_current_target(arm, arm_zero, scale=4, speed=0.5, extra_wait=3.0)
+    smooth_arm_to_current_target(
+        arm,
+        arm_zero,
+        scale=4,
+        speed=0.5 / ARM_SPEEDUP_FACTOR,
+        extra_wait=STAGE_DELAY_SEC,
+    )
 
     hand_zero = np.zeros((1, 16), dtype=float)
-    hand_loose = scale_action(refresh_current_hand(leap), hand_zero, 1)
-    if not leap.command_joint_position(hand_loose, 3.0):
-        raise RuntimeError("Failed to publish fruit hand release trajectory")
-    time.sleep(3.0)
+    command_delayed_thumb_reset(
+        leap,
+        refresh_current_hand(leap),
+        hand_zero,
+        point_duration=3.0 / RELEASE_HAND_SPEEDUP_FACTOR,
+        trajectory_points=1,
+        extra_wait=STAGE_DELAY_SEC,
+    )
 
 
 execute_cube_grasp_hand = execute_fruit_grasp_hand

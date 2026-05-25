@@ -12,7 +12,9 @@ from interface.motion_utils import refresh_current_joint_states, scale_action
 
 
 STOP_TOPIC = '/action_stop'
+SIGNAL_TOPIC = '/recognized_signal'
 ROTATION_ACTION = 'action5_rot'
+RESET_SIGNAL = '10'
 
 
 class CubeRotationDemo:
@@ -25,7 +27,10 @@ class CubeRotationDemo:
         self.soft_start_steps = 25
         self.playback_points = 901
         self.stop_requested = False
-        self.arm_target = np.array([0.0, 0.0, 0.0, 1.14, 0.0, 2.0], dtype=float).reshape(1, 6)
+        self.stop_hold_repeats = 3
+        self.stop_hold_duration = 0.05
+        self.stop_hold_interval = 0.05
+        self.arm_target = np.array([0.0, 0.0, -0.0, 1.03, 0, 2.0], dtype=float).reshape(1, 6)
         self.hand_trajectory_path = os.path.join(os.path.dirname(__file__), "cache", "hand16.npy")
 
         self.leap_dof_upper = np.array([
@@ -42,10 +47,10 @@ class CubeRotationDemo:
         ])
 
         self.joint_offsets = np.array([
-            0.0, 0.0, 0.3, 0.0,
-            0.0, 0.0, -0.3, 0.0,
+            0.0, 0.0, -0.0, 0.0,
+            0.0, 0.0, -0.0, 0.0,
             0.0, 0.0, 0.0, 0.0,
-            0.0, 0.0, 0.0, 0.0,
+            0.0, 0.0, -0.0, 0.0,
         ], dtype=float)
 
     def request_stop(self, reason=''):
@@ -59,6 +64,10 @@ class CubeRotationDemo:
         token = msg.data.strip().lower()
         if token in ('', 'all', ROTATION_ACTION):
             self.request_stop(f'received stop topic {token or "all"}')
+
+    def recognized_signal_callback(self, msg):
+        if msg.data.strip() == RESET_SIGNAL:
+            self.request_stop(f'received reset signal {RESET_SIGNAL}')
 
     def stop_signal_handler(self, signum, _frame):
         self.request_stop(f'received signal {signum}')
@@ -94,10 +103,19 @@ class CubeRotationDemo:
     def hold_current_pose(self, leap, arm):
         try:
             self.spin_nodes(leap, arm, timeout_sec=0.1)
-            hand_ok = leap.hold_current_position()
-            arm_ok = arm.hold_current_position()
-            if hand_ok or arm_ok:
-                leap.get_logger().info('已发送当前位置保持指令，用于覆盖当前旋转轨迹。')
+            hand_sent = False
+            arm_sent = False
+            repeats = self.stop_hold_repeats if self.stop_requested else 1
+            for index in range(repeats):
+                hand_ok = leap.hold_current_position(self.stop_hold_duration)
+                arm_ok = arm.hold_current_position(self.stop_hold_duration)
+                hand_sent = hand_sent or hand_ok
+                arm_sent = arm_sent or arm_ok
+                self.spin_nodes(leap, arm, timeout_sec=0.0)
+                if index + 1 < repeats:
+                    time.sleep(self.stop_hold_interval)
+            if hand_sent or arm_sent:
+                leap.get_logger().info('已重复发送当前位置保持指令，用于覆盖当前旋转轨迹。')
         except Exception as exc:
             leap.get_logger().warn(f'发送停止保持指令失败: {exc}')
 
@@ -165,6 +183,8 @@ class CubeRotationDemo:
         rclpy.init()
         leap = LeapHand("action7_rot_hand")
         arm = LeapArm("action7_rot_arm")
+        leap.create_subscription(String, SIGNAL_TOPIC, self.recognized_signal_callback, 10)
+        arm.create_subscription(String, SIGNAL_TOPIC, self.recognized_signal_callback, 10)
         leap.create_subscription(String, STOP_TOPIC, self.stop_callback, 10)
         arm.create_subscription(String, STOP_TOPIC, self.stop_callback, 10)
         signal.signal(signal.SIGTERM, self.stop_signal_handler)

@@ -608,7 +608,7 @@ class ChessboardHandEyeCalibrationNode(Node):
         flange_to_camera[:3, 3] = translation_camera_to_gripper.reshape(3)
         camera_to_flange = invert_transform(flange_to_camera)
         target_to_base_samples = [np.array(sample['base_to_flange'], dtype=float) @ flange_to_camera @ np.array(sample['target_to_camera'], dtype=float) for sample in self.samples]
-        diagnostics = self.compute_diagnostics(target_to_base_samples)
+        diagnostics = self.compute_diagnostics(flange_to_camera, target_to_base_samples)
 
         os.makedirs(os.path.dirname(self.output_matrix_file) or '.', exist_ok=True)
         np.savetxt(self.output_matrix_file, flange_to_camera, fmt='%.10f')
@@ -617,26 +617,162 @@ class ChessboardHandEyeCalibrationNode(Node):
         self.get_logger().info(f'手眼标定完成，方法={self.calibration_method_name}')
         self.get_logger().info(f'已保存 {self.flange_frame_id}->{self.camera_frame_id}: {self.output_matrix_file}')
         self.get_logger().info('T_flange_camera =\n' + np.array2string(flange_to_camera, precision=6, suppress_small=True))
-        self.get_logger().info(
-            f"target->base 平移一致性 RMS={diagnostics['translation_rms_m'] * 1000.0:.2f}mm，"
-            f"最大={diagnostics['translation_max_m'] * 1000.0:.2f}mm，"
-            f"旋转 RMS={diagnostics['rotation_rms_deg']:.3f}deg"
-        )
+        self.log_diagnostics(diagnostics)
 
-    def compute_diagnostics(self, target_to_base_samples):
+    def compute_diagnostics(self, flange_to_camera, target_to_base_samples):
+        reprojection_errors = np.array([
+            float(sample.get('reprojection_error_px', float('nan')))
+            for sample in self.samples
+        ], dtype=float)
+        reprojection_errors = reprojection_errors[np.isfinite(reprojection_errors)]
+
         translations = np.array([transform[:3, 3] for transform in target_to_base_samples], dtype=float)
         translation_center = translations.mean(axis=0)
         translation_errors = np.linalg.norm(translations - translation_center, axis=1)
         rotations = [transform[:3, :3] for transform in target_to_base_samples]
         reference_rotation = rotations[0]
         rotation_errors = np.array([rotation_angle_between(reference_rotation, rotation) for rotation in rotations])
-        return {
+
+        worst_translation_index = int(np.argmax(translation_errors)) if translation_errors.size else -1
+        worst_rotation_index = int(np.argmax(rotation_errors)) if rotation_errors.size else -1
+
+        gripper_poses = [np.array(sample['base_to_flange'], dtype=float) for sample in self.samples]
+        camera_target_poses = [np.array(sample['target_to_camera'], dtype=float) for sample in self.samples]
+        motion_diversity = self.compute_motion_diversity(gripper_poses, camera_target_poses)
+        hand_eye_residuals = self.compute_hand_eye_residuals(gripper_poses, camera_target_poses, flange_to_camera)
+
+        target_to_base_consistency = {
             'translation_mean_m': translation_center.tolist(),
+            'translation_error_per_sample_m': translation_errors.tolist(),
             'translation_rms_m': float(np.sqrt(np.mean(translation_errors * translation_errors))),
+            'translation_mean_abs_m': float(np.mean(translation_errors)),
             'translation_max_m': float(np.max(translation_errors)),
+            'translation_worst_sample': worst_translation_index + 1,
+            'rotation_error_per_sample_deg': rotation_errors.tolist(),
             'rotation_rms_deg': float(np.sqrt(np.mean(rotation_errors * rotation_errors))),
+            'rotation_mean_abs_deg': float(np.mean(rotation_errors)),
             'rotation_max_deg': float(np.max(rotation_errors)),
+            'rotation_worst_sample': worst_rotation_index + 1,
         }
+
+        return {
+            'sample_count': len(self.samples),
+            'reprojection_error_px': self.array_stats(reprojection_errors),
+            'target_to_base_consistency': target_to_base_consistency,
+            'motion_diversity': motion_diversity,
+            'hand_eye_equation_residual_ax_xb': hand_eye_residuals,
+            # Backward-compatible aliases used by older saved diagnostics readers.
+            'translation_mean_m': target_to_base_consistency['translation_mean_m'],
+            'translation_rms_m': target_to_base_consistency['translation_rms_m'],
+            'translation_max_m': target_to_base_consistency['translation_max_m'],
+            'rotation_rms_deg': target_to_base_consistency['rotation_rms_deg'],
+            'rotation_max_deg': target_to_base_consistency['rotation_max_deg'],
+        }
+
+    def array_stats(self, values):
+        values = np.array(values, dtype=float)
+        values = values[np.isfinite(values)]
+        if values.size == 0:
+            return {
+                'count': 0,
+                'mean': None,
+                'rms': None,
+                'min': None,
+                'max': None,
+                'std': None,
+            }
+        return {
+            'count': int(values.size),
+            'mean': float(np.mean(values)),
+            'rms': float(np.sqrt(np.mean(values * values))),
+            'min': float(np.min(values)),
+            'max': float(np.max(values)),
+            'std': float(np.std(values)),
+        }
+
+    def compute_motion_diversity(self, gripper_poses, camera_target_poses):
+        gripper_pair_translations = []
+        gripper_pair_rotations = []
+        camera_pair_translations = []
+        camera_pair_rotations = []
+
+        for i in range(len(gripper_poses)):
+            for j in range(i + 1, len(gripper_poses)):
+                gripper_delta = invert_transform(gripper_poses[i]) @ gripper_poses[j]
+                camera_delta = camera_target_poses[j] @ invert_transform(camera_target_poses[i])
+                gripper_pair_translations.append(np.linalg.norm(gripper_delta[:3, 3]))
+                gripper_pair_rotations.append(rotation_angle_between(np.eye(3), gripper_delta[:3, :3]))
+                camera_pair_translations.append(np.linalg.norm(camera_delta[:3, 3]))
+                camera_pair_rotations.append(rotation_angle_between(np.eye(3), camera_delta[:3, :3]))
+
+        gripper_positions = np.array([pose[:3, 3] for pose in gripper_poses], dtype=float)
+        target_positions_in_camera = np.array([pose[:3, 3] for pose in camera_target_poses], dtype=float)
+        return {
+            'pair_count': len(gripper_pair_translations),
+            'gripper_pair_translation_m': self.array_stats(gripper_pair_translations),
+            'gripper_pair_rotation_deg': self.array_stats(gripper_pair_rotations),
+            'target_pair_translation_in_camera_m': self.array_stats(camera_pair_translations),
+            'target_pair_rotation_in_camera_deg': self.array_stats(camera_pair_rotations),
+            'gripper_xyz_range_m': (np.max(gripper_positions, axis=0) - np.min(gripper_positions, axis=0)).tolist(),
+            'target_xyz_range_in_camera_m': (np.max(target_positions_in_camera, axis=0) - np.min(target_positions_in_camera, axis=0)).tolist(),
+        }
+
+    def compute_hand_eye_residuals(self, gripper_poses, camera_target_poses, flange_to_camera):
+        translation_residuals = []
+        rotation_residuals = []
+        for i in range(len(gripper_poses)):
+            for j in range(i + 1, len(gripper_poses)):
+                gripper_motion = invert_transform(gripper_poses[j]) @ gripper_poses[i]
+                camera_motion = camera_target_poses[j] @ invert_transform(camera_target_poses[i])
+                left = gripper_motion @ flange_to_camera
+                right = flange_to_camera @ camera_motion
+                residual = invert_transform(left) @ right
+                translation_residuals.append(np.linalg.norm(residual[:3, 3]))
+                rotation_residuals.append(rotation_angle_between(np.eye(3), residual[:3, :3]))
+
+        return {
+            'pair_count': len(translation_residuals),
+            'translation_m': self.array_stats(translation_residuals),
+            'rotation_deg': self.array_stats(rotation_residuals),
+        }
+
+    def log_diagnostics(self, diagnostics):
+        reproj = diagnostics['reprojection_error_px']
+        consistency = diagnostics['target_to_base_consistency']
+        diversity = diagnostics['motion_diversity']
+        residual = diagnostics['hand_eye_equation_residual_ax_xb']
+
+        self.get_logger().info('========== 手眼标定效果评估 ==========')
+        self.get_logger().info(
+            f"样本数={diagnostics['sample_count']}，重投影误差: "
+            f"mean={reproj['mean']:.3f}px, rms={reproj['rms']:.3f}px, "
+            f"max={reproj['max']:.3f}px, std={reproj['std']:.3f}px"
+        )
+        self.get_logger().info(
+            f"标定板在基座系一致性: 平移 RMS={consistency['translation_rms_m'] * 1000.0:.2f}mm, "
+            f"mean={consistency['translation_mean_abs_m'] * 1000.0:.2f}mm, "
+            f"max={consistency['translation_max_m'] * 1000.0:.2f}mm(样本#{consistency['translation_worst_sample']}), "
+            f"旋转 RMS={consistency['rotation_rms_deg']:.3f}deg, "
+            f"max={consistency['rotation_max_deg']:.3f}deg(样本#{consistency['rotation_worst_sample']})"
+        )
+        self.get_logger().info(
+            f"AX=XB 成对残差: 平移 RMS={residual['translation_m']['rms'] * 1000.0:.2f}mm, "
+            f"max={residual['translation_m']['max'] * 1000.0:.2f}mm, "
+            f"旋转 RMS={residual['rotation_deg']['rms']:.3f}deg, "
+            f"max={residual['rotation_deg']['max']:.3f}deg"
+        )
+        self.get_logger().info(
+            f"末端采样运动覆盖: 两两最大平移={diversity['gripper_pair_translation_m']['max'] * 1000.0:.1f}mm, "
+            f"两两最大旋转={diversity['gripper_pair_rotation_deg']['max']:.1f}deg, "
+            f"XYZ范围(m)={np.round(diversity['gripper_xyz_range_m'], 4).tolist()}"
+        )
+        self.get_logger().info(
+            f"棋盘格相机视角覆盖: 两两最大平移={diversity['target_pair_translation_in_camera_m']['max'] * 1000.0:.1f}mm, "
+            f"两两最大旋转={diversity['target_pair_rotation_in_camera_deg']['max']:.1f}deg, "
+            f"XYZ范围(m)={np.round(diversity['target_xyz_range_in_camera_m'], 4).tolist()}"
+        )
+        self.get_logger().info('经验阈值: 重投影 <0.5px 较好；target->base 平移RMS <5mm 较好，>10mm 通常需重采；末端最大旋转建议 >40deg。')
+        self.get_logger().info('======================================')
 
     def save_samples_file(self, flange_to_camera, camera_to_flange, target_to_base_samples, diagnostics):
         os.makedirs(os.path.dirname(self.samples_file) or '.', exist_ok=True)

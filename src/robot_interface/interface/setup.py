@@ -15,6 +15,7 @@ setup(
     include_package_data=True,
     package_data={
         package_name: [
+            'data/*',
             'cfg/*.yaml',
             'cfg/task/*',
             'cfg/train/*',
@@ -26,6 +27,8 @@ setup(
         ('share/ament_index/resource_index/packages',
             ['resource/' + package_name]),
         ('share/' + package_name, ['package.xml']),
+        (os.path.join('share', package_name, 'data'),
+         glob_files(os.path.join(package_name, 'data', '*'))),
         (os.path.join('share', package_name, 'cache'), 
          glob_files(os.path.join(package_name, 'cache', '*'))),
 
@@ -56,6 +59,7 @@ setup(
     entry_points={
         'console_scripts': [
         'ultimate_yolo_node_cpu=interface.ultimate_yolo_node_cpu:main',
+         'position_player=interface.position_player:main',
          'action1_4_move=interface.action1_4_move:main',
          'action5_rot=interface.action5_rot:main',
          'action6_gsp=interface.action6_gsp:main',

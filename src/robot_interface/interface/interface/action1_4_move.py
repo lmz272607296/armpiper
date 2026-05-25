@@ -4,6 +4,7 @@ import json
 import math
 import threading
 import time
+from collections import deque
 
 import numpy as np
 import rclpy
@@ -24,22 +25,22 @@ class ActionMoveNode(Node):
         self.declare_parameter('joint_command_topic', '/joint_states')
         self.declare_parameter('enable_service', '/enable_srv')
         self.declare_parameter('status_topic', '/task_status')
-        self.declare_parameter('default_distance', 0.02)
+        self.declare_parameter('default_distance', 0.04)
         self.declare_parameter('max_distance', 0.24)
-        self.declare_parameter('max_joint_step_rad', 0.03)
-        self.declare_parameter('max_command_joint_delta_rad', 0.2)
-        self.declare_parameter('ik_iterations', 80)
-        self.declare_parameter('ik_damping', 0.06)
-        self.declare_parameter('position_tolerance', 0.0015)
-        self.declare_parameter('max_final_error', 0.02)
-        self.declare_parameter('fk_feedback_max_error', 0.08)
-        self.declare_parameter('orientation_weight', 0.35)
+        self.declare_parameter('max_joint_step_rad', 0.05)
+        self.declare_parameter('max_command_joint_delta_rad', 1.2)
+        self.declare_parameter('ik_iterations', 140)
+        self.declare_parameter('ik_damping', 0.08)
+        self.declare_parameter('position_tolerance', 0.0025)
+        self.declare_parameter('max_final_error', 0.045)
+        self.declare_parameter('fk_feedback_max_error', 0.12)
+        self.declare_parameter('orientation_weight', 0.12)
         self.declare_parameter('cartesian_path_points', 18)
         self.declare_parameter('horizontal_z_bias_m', 0.0)
         self.declare_parameter('enable_wrist_level_compensation', True)
         self.declare_parameter('wrist_level_axis_z', 0.0)
         self.declare_parameter('wrist_level_gain', 1.0)
-        self.declare_parameter('max_wrist_level_correction_rad', 0.2)
+        self.declare_parameter('max_wrist_level_correction_rad', 1.2)
         self.declare_parameter('home_joints', [0.0, 0.0, 0.0, 0.0, 0.0, 0.0])
         self.declare_parameter('home_after_enable', True)
         self.declare_parameter('home_after_enable_delay_sec', 0.8)
@@ -80,6 +81,8 @@ class ActionMoveNode(Node):
         self.command_rate_hz = float(self.get_parameter('command_rate_hz').value)
         self.dry_run = bool(self.get_parameter('dry_run').value)
         self.exit_after_action = bool(self.get_parameter('exit_after_action').value)
+        self.relaxed_max_final_error = max(self.max_final_error * 2.0, self.max_final_error + 0.03)
+        self.orientation_free_max_final_error = max(self.max_final_error * 2.5, self.max_final_error + 0.05)
 
         self.joint_names = ['joint1', 'joint2', 'joint3', 'joint4', 'joint5', 'joint6']
         self.joint_lower = np.array([-2.618, 0.0, -2.967, -1.745, -1.22, -2.0944], dtype=float)
@@ -93,6 +96,7 @@ class ActionMoveNode(Node):
         self.motion_active = False
         self.action_thread_lock = threading.Lock()
         self.action_thread = None
+        self.pending_move_actions = deque()
         self.exit_requested_after_action = False
 
         self.action_sub = self.create_subscription(
@@ -161,23 +165,31 @@ class ActionMoveNode(Node):
 
     def start_move_thread(self, action):
         with self.action_thread_lock:
+            self.pending_move_actions.append(dict(action))
             if self.action_thread is not None and self.action_thread.is_alive():
-                self.publish_status('已有移动动作正在执行，忽略新的移动命令。')
-                return False
+                return True
 
             self.action_thread = threading.Thread(
-                target=self.run_move_action,
-                args=(dict(action),),
+                target=self.run_move_actions,
                 daemon=True,
             )
             self.action_thread.start()
             return True
 
-    def run_move_action(self, action):
+    def run_move_actions(self):
+        should_exit = False
         try:
-            self.handle_move(action)
+            while rclpy.ok():
+                with self.action_thread_lock:
+                    if not self.pending_move_actions:
+                        self.action_thread = None
+                        should_exit = self.exit_after_action or self.exit_requested_after_action
+                        break
+                    action = self.pending_move_actions.popleft()
+
+                self.handle_move(action)
         finally:
-            if self.exit_after_action or self.exit_requested_after_action:
+            if should_exit:
                 self.publish_status('本次动作执行结束，action1_4_move 即将退出。')
                 self.shutdown_soon()
 
@@ -213,12 +225,15 @@ class ActionMoveNode(Node):
         offset = np.array(offset, dtype=float)
         start_z = float(start_pos[2])
         path_points = max(2, self.cartesian_path_points)
+        lateral_move = direction in ('left', 'right')
         joint_path = []
         q_seed = start_q.copy()
         max_final_error = 0.0
         max_joint_delta = 0.0
         total_wrist_level_correction = 0.0
         wrist_level_error = 0.0
+        used_relaxed_ik = False
+        skipped_wrist_compensation = False
 
         for point_index in range(1, path_points + 1):
             ratio = point_index / path_points
@@ -229,26 +244,34 @@ class ActionMoveNode(Node):
             else:
                 target_pos[2] = start_z
 
-            target_q, final_error = self.solve_ik(q_seed, target_pos, target_rot)
-            if final_error > self.max_final_error:
+            target_q, final_error, ik_mode = self.solve_ik_with_relaxation(
+                q_seed,
+                target_pos,
+                target_rot,
+                lateral_move=lateral_move,
+            )
+            if final_error > self.orientation_free_max_final_error:
                 self.publish_status(
                     f'第 {point_index}/{path_points} 个笛卡尔路径点 IK 误差过大 '
                     f'{final_error:.4f}m，已拒绝发送。'
                 )
                 return
+            used_relaxed_ik = used_relaxed_ik or ik_mode != 'strict'
 
             wrist_level_correction = 0.0
             wrist_level_error = self.get_wrist_level_error(target_q)
             if self.enable_wrist_level_compensation:
-                target_q, wrist_level_correction, wrist_level_error = self.compensate_joint5_wrist_level(target_q)
+                compensation_error_limit = self.relaxed_max_final_error if lateral_move else self.max_final_error
+                target_q, wrist_level_correction, wrist_level_error, compensation_applied = self.apply_wrist_level_compensation(
+                    target_q,
+                    target_pos,
+                    final_error,
+                    lateral_move=lateral_move,
+                    error_limit=compensation_error_limit,
+                )
+                skipped_wrist_compensation = skipped_wrist_compensation or not compensation_applied
                 compensated_pos, _, _ = self.forward_kinematics(target_q)
                 final_error = float(np.linalg.norm(target_pos - compensated_pos))
-                if final_error > self.max_final_error:
-                    self.publish_status(
-                        f'第 {point_index}/{path_points} 个笛卡尔路径点 joint5 腕部水平补偿后 IK 误差 '
-                        f'{final_error:.4f}m 超过阈值，已拒绝发送。'
-                    )
-                    return
 
             target_q = np.clip(target_q, self.joint_lower, self.joint_upper)
             if not np.all(np.isfinite(target_q)):
@@ -281,7 +304,9 @@ class ActionMoveNode(Node):
             f"目标关节={np.round(joint_path[-1], 3).tolist() if joint_path else []}，"
             f"最大路径关节步长={max_joint_delta:.3f}rad，"
             f"累计joint5水平补偿={total_wrist_level_correction:.3f}rad，腕轴Z误差={wrist_level_error:.3f}，"
-            f"Z前馈={self.horizontal_z_bias_m:.4f}m"
+            f"Z前馈={self.horizontal_z_bias_m:.4f}m，"
+            f"IK模式={'放宽' if used_relaxed_ik else '标准'}，"
+            f"腕部补偿={'部分跳过' if skipped_wrist_compensation else '已应用'}"
         )
 
     def feedback_is_ready(self):
@@ -429,30 +454,115 @@ class ActionMoveNode(Node):
             with self.motion_lock:
                 self.motion_active = False
 
-    def solve_ik(self, initial_q, target_pos, target_rot):
-        q = initial_q.copy()
-        damping_matrix = (self.ik_damping ** 2) * np.eye(6)
+    def solve_ik_with_relaxation(self, initial_q, target_pos, target_rot, lateral_move=False):
+        orientation_weight = self.orientation_weight * (0.35 if lateral_move else 1.0)
+        max_error_limit = self.relaxed_max_final_error if lateral_move else self.max_final_error
+        attempts = [
+            {
+                'name': 'strict',
+                'orientation_weight': orientation_weight,
+                'ik_iterations': self.ik_iterations,
+                'ik_damping': self.ik_damping,
+                'max_joint_step_rad': self.max_joint_step_rad,
+                'max_error_limit': max_error_limit,
+            },
+            {
+                'name': 'relaxed',
+                'orientation_weight': orientation_weight * 0.35,
+                'ik_iterations': int(self.ik_iterations * 1.35),
+                'ik_damping': self.ik_damping * 1.25,
+                'max_joint_step_rad': self.max_joint_step_rad * 1.5,
+                'max_error_limit': max(self.relaxed_max_final_error, max_error_limit),
+            },
+            {
+                'name': 'position_priority',
+                'orientation_weight': orientation_weight * 0.1,
+                'ik_iterations': int(self.ik_iterations * 1.6),
+                'ik_damping': self.ik_damping * 1.4,
+                'max_joint_step_rad': self.max_joint_step_rad * 2.0,
+                'max_error_limit': self.orientation_free_max_final_error,
+            },
+            {
+                'name': 'position_only',
+                'orientation_weight': 0.0,
+                'ik_iterations': int(self.ik_iterations * 1.8),
+                'ik_damping': self.ik_damping * 1.5,
+                'max_joint_step_rad': self.max_joint_step_rad * 2.4,
+                'max_error_limit': self.orientation_free_max_final_error,
+            },
+        ]
 
-        for _ in range(self.ik_iterations):
+        best_q = initial_q.copy()
+        best_error = float('inf')
+        best_mode = attempts[-1]['name']
+        for attempt in attempts:
+            target_q, final_error = self.solve_ik(
+                initial_q,
+                target_pos,
+                target_rot,
+                orientation_weight=attempt['orientation_weight'],
+                ik_iterations=attempt['ik_iterations'],
+                ik_damping=attempt['ik_damping'],
+                max_joint_step_rad=attempt['max_joint_step_rad'],
+            )
+            if final_error < best_error:
+                best_q = target_q
+                best_error = final_error
+                best_mode = attempt['name']
+            if final_error <= attempt['max_error_limit']:
+                return target_q, final_error, attempt['name']
+
+        return best_q, best_error, best_mode
+
+    def solve_ik(
+            self,
+            initial_q,
+            target_pos,
+            target_rot,
+            orientation_weight=None,
+            ik_iterations=None,
+            ik_damping=None,
+            max_joint_step_rad=None):
+        q = initial_q.copy()
+        orientation_weight = self.orientation_weight if orientation_weight is None else max(0.0, float(orientation_weight))
+        ik_iterations = self.ik_iterations if ik_iterations is None else max(1, int(ik_iterations))
+        ik_damping = self.ik_damping if ik_damping is None else max(1e-6, float(ik_damping))
+        max_joint_step_rad = self.max_joint_step_rad if max_joint_step_rad is None else max(1e-4, float(max_joint_step_rad))
+        damping_matrix = (ik_damping ** 2) * np.eye(6)
+
+        for _ in range(ik_iterations):
             pos, rot, joint_frames = self.forward_kinematics(q)
             pos_error = target_pos - pos
             if np.linalg.norm(pos_error) <= self.position_tolerance:
                 break
 
-            rot_error = self.rotation_error(rot, target_rot) * self.orientation_weight
+            rot_error = self.rotation_error(rot, target_rot) * orientation_weight
             error = np.concatenate([pos_error, rot_error])
 
             jacobian = self.compute_geometric_jacobian(pos, joint_frames)
             weighted_jacobian = jacobian.copy()
-            weighted_jacobian[3:6, :] *= self.orientation_weight
+            weighted_jacobian[3:6, :] *= orientation_weight
             step = weighted_jacobian.T @ np.linalg.solve(
                 weighted_jacobian @ weighted_jacobian.T + damping_matrix,
                 error,
             )
-            q = np.clip(q + np.clip(step, -self.max_joint_step_rad, self.max_joint_step_rad), self.joint_lower, self.joint_upper)
+            q = np.clip(q + np.clip(step, -max_joint_step_rad, max_joint_step_rad), self.joint_lower, self.joint_upper)
 
         final_pos, _, _ = self.forward_kinematics(q)
         return q, float(np.linalg.norm(target_pos - final_pos))
+
+    def apply_wrist_level_compensation(self, q, target_pos, initial_error, lateral_move=False, error_limit=None):
+        error_limit = self.max_final_error if error_limit is None else max(self.max_final_error, float(error_limit))
+        candidate_q, wrist_level_correction, wrist_level_error = self.compensate_joint5_wrist_level(
+            q,
+            max_step_scale=1.5 if lateral_move else 1.0,
+            max_correction_scale=1.6 if lateral_move else 1.0,
+        )
+        compensated_pos, _, _ = self.forward_kinematics(candidate_q)
+        compensated_error = float(np.linalg.norm(target_pos - compensated_pos))
+        if compensated_error <= error_limit or compensated_error <= initial_error + 0.01:
+            return candidate_q, wrist_level_correction, wrist_level_error, True
+        return q, 0.0, self.get_wrist_level_error(q), False
 
     def forward_kinematics(self, q):
         transform = np.eye(4)
@@ -473,10 +583,10 @@ class ActionMoveNode(Node):
             jacobian[3:, index] = axis
         return jacobian
 
-    def compensate_joint5_wrist_level(self, q):
+    def compensate_joint5_wrist_level(self, q, max_step_scale=1.0, max_correction_scale=1.0):
         compensated_q = q.copy()
         start_joint5 = compensated_q[4]
-        max_correction = max(0.0, self.max_wrist_level_correction_rad)
+        max_correction = max(0.0, self.max_wrist_level_correction_rad * max_correction_scale)
 
         for _ in range(8):
             error = self.get_wrist_level_error(compensated_q)
@@ -491,7 +601,8 @@ class ActionMoveNode(Node):
                 break
 
             step = -self.wrist_level_gain * error / derivative
-            step = float(np.clip(step, -self.max_joint_step_rad, self.max_joint_step_rad))
+            max_step = self.max_joint_step_rad * max(1.0, float(max_step_scale))
+            step = float(np.clip(step, -max_step, max_step))
             next_joint5 = compensated_q[4] + step
             next_joint5 = float(np.clip(next_joint5, start_joint5 - max_correction, start_joint5 + max_correction))
             next_joint5 = float(np.clip(next_joint5, self.joint_lower[4], self.joint_upper[4]))

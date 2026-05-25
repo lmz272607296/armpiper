@@ -73,6 +73,12 @@ def load_matrix(matrix_file):
     return matrix
 
 
+def apply_base_position_bias(base_point, x_bias_m):
+    base_point = np.asarray(base_point, dtype=float).copy()
+    base_point[0] += float(x_bias_m)
+    return base_point
+
+
 class EyeInHandCalibrationNode(Node):
     def __init__(self):
         super().__init__('eye_in_hand_calibration_node')
@@ -89,6 +95,7 @@ class EyeInHandCalibrationNode(Node):
         self.declare_parameter('max_end_pose_age_sec', 1.0)
         self.declare_parameter('publish_invalid_detections', True)
         self.declare_parameter('log_interval_sec', 2.0)
+        self.declare_parameter('base_x_bias_m', -0.03)
 
         input_topic = self.get_parameter('input_detection_topic').value
         output_topic = self.get_parameter('output_detection_topic').value
@@ -99,6 +106,7 @@ class EyeInHandCalibrationNode(Node):
         self.max_end_pose_age_sec = float(self.get_parameter('max_end_pose_age_sec').value)
         self.publish_invalid_detections = bool(self.get_parameter('publish_invalid_detections').value)
         self.log_interval_sec = float(self.get_parameter('log_interval_sec').value)
+        self.base_x_bias_m = float(self.get_parameter('base_x_bias_m').value)
         self.last_log_time = 0.0
 
         matrix_file = self.get_parameter('hand_eye_matrix_file').value
@@ -127,7 +135,8 @@ class EyeInHandCalibrationNode(Node):
 
         self.get_logger().info(
             f'眼在手上坐标转换节点已启动: {input_topic} -> {output_topic}，'
-            f'末端位姿 {end_pose_topic}，输出坐标系 {self.base_frame_id}。'
+            f'末端位姿 {end_pose_topic}，输出坐标系 {self.base_frame_id}，'
+            f'base_x_bias_m={self.base_x_bias_m:.3f}。'
         )
 
     def end_pose_callback(self, msg):
@@ -201,6 +210,7 @@ class EyeInHandCalibrationNode(Node):
             return None
 
         base_point = base_to_camera @ camera_point
+        base_point = apply_base_position_bias(base_point[:3], self.base_x_bias_m)
         return {
             'x': float(base_point[0]),
             'y': float(base_point[1]),

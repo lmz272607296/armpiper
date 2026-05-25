@@ -11,6 +11,10 @@ import time
 from matplotlib import scale
 from matplotlib.pyplot import sca
 import rclpy
+try:
+    from control_msgs.msg import DynamicJointState
+except ImportError:
+    DynamicJointState = None
 from rclpy.node import Node
 from std_msgs.msg import String
 from std_msgs.msg import Float32
@@ -23,6 +27,39 @@ from builtin_interfaces.msg import Time
 import numpy as np
 #from builtin_interfaces.msg import Duration
 from rclpy.duration import Duration
+
+
+CURRENT_INTERFACE_NAMES = ("Present Current", "Current")
+
+
+def extract_currents_from_dynamic_joint_state(msg, joint_names=None):
+    selected_joint_names = None if joint_names is None else set(joint_names)
+    currents = {}
+    for joint_name, interface_values in zip(msg.joint_names, msg.interface_values):
+        if selected_joint_names is not None and joint_name not in selected_joint_names:
+            continue
+
+        interface_names = list(getattr(interface_values, "interface_names", []))
+        values = list(getattr(interface_values, "values", []))
+        current_index = None
+        for interface_name in CURRENT_INTERFACE_NAMES:
+            try:
+                current_index = interface_names.index(interface_name)
+                break
+            except ValueError:
+                continue
+
+        if current_index is None or current_index >= len(values):
+            continue
+
+        try:
+            currents[str(joint_name)] = float(values[current_index])
+        except (TypeError, ValueError):
+            continue
+
+    return currents
+
+
 class LeapHand(Node):
     def __init__(self,name):
         super().__init__(name)
@@ -31,8 +68,10 @@ class LeapHand(Node):
         #声明两个用于存储电机数据的参数，两个参数是名称和默认值。
         self.declare_parameter('command_topic', '/hand_controller/joint_trajectory')
         self.declare_parameter('state_topic', '/hand_joint_states')
+        self.declare_parameter('dynamic_state_topic', '/hand_dynamic_joint_states')
         self.command_topic = self.get_parameter('command_topic').value
         self.state_topic = self.get_parameter('state_topic').value
+        self.dynamic_state_topic = self.get_parameter('dynamic_state_topic').value
 
         #创建发布器，Publisher=create_publisher(msg_type,topic_name,Qosfile)
         #Qos可能会影响性能，后面可能微调
@@ -40,8 +79,8 @@ class LeapHand(Node):
 
         qos_profile = QoSProfile(
             depth=10,  # 队列深度
-            reliability=ReliabilityPolicy.RMW_QOS_POLICY_RELIABILITY_RELIABLE,  # 设置可靠性为Reliable
-            history=HistoryPolicy.RMW_QOS_POLICY_HISTORY_KEEP_LAST,  # 设置只保留最近的消息
+            reliability=ReliabilityPolicy.RELIABLE,  # 设置可靠性为Reliable
+            history=HistoryPolicy.KEEP_LAST,  # 设置只保留最近的消息
             )
         
         
@@ -51,11 +90,26 @@ class LeapHand(Node):
             self.controller_state_callback,
             qos_profile
         )
+        self.dynamic_subscription = None
+        if DynamicJointState is not None:
+            self.dynamic_subscription = self.create_subscription(
+                DynamicJointState,
+                self.dynamic_state_topic,
+                self.dynamic_state_callback,
+                qos_profile,
+            )
+        else:
+            self.get_logger().warn('control_msgs.msg.DynamicJointState 不可用，无法读取手部电机电流。')
         
         #读取电机状态的订阅器，订阅话题为/hand_joint_states，避免与Piper机械臂冲突
         self.raw_positions = None
         self.real_raw_positions = None
         self.last_state_time = 0.0
+        # 定义灵巧手电机数量，后续电流监控和维度检查都会用到。
+        self.joints_num = 16
+        self.latest_currents_ma = {}
+        self.last_current_time = 0.0
+        self.current_joint_names = tuple(f'dxl{i}' for i in range(self.joints_num))
 
 
 
@@ -63,9 +117,6 @@ class LeapHand(Node):
         self.real_to_sim_indices=[1, 0, 2, 3, 12, 13, 14, 15, 5, 4, 6, 7, 9, 8, 10, 11]
 
         self.log_to_real_indices = [8, 12, 11, 0, 2, 1, 13, 3, 4, 15, 6, 7, 9, 5, 14, 10]
-
-        #定义灵巧手电机数量。
-        self.joints_num = 16
 
     def sim_to_real(self, values):
         return values[self.sim_to_real_indices]
@@ -124,6 +175,19 @@ class LeapHand(Node):
               
         except Exception as e:
             self.get_logger().error(f"Positions message launching error: {repr(e)}")
+
+    def dynamic_state_callback(self, msg):
+        try:
+            current_updates = extract_currents_from_dynamic_joint_state(
+                msg,
+                joint_names=self.current_joint_names,
+            )
+            if not current_updates:
+                return
+            self.latest_currents_ma.update(current_updates)
+            self.last_current_time = time.time()
+        except Exception as exc:
+            self.get_logger().error(f"Current message launching error: {repr(exc)}")
 
     def command_joint_position(self, desired_pose,speed):
         desired_pose = np.asarray(desired_pose, dtype=float)
@@ -201,6 +265,32 @@ class LeapHand(Node):
             return False
         current_pose = np.asarray(self.raw_positions, dtype=float).reshape(1, self.joints_num)
         return self.command_joint_position(current_pose, duration)
+
+    def has_current_samples(self, joint_names=None):
+        monitored_names = tuple(joint_names or self.latest_currents_ma.keys())
+        if not monitored_names:
+            return False
+        return any(name in self.latest_currents_ma for name in monitored_names)
+
+    def get_current_snapshot(self, joint_names=None):
+        if joint_names is None:
+            selected_names = self.latest_currents_ma.keys()
+        else:
+            selected_names = joint_names
+        return {
+            name: self.latest_currents_ma[name]
+            for name in selected_names
+            if name in self.latest_currents_ma
+        }
+
+    def get_over_limit_currents(self, limit_ma, joint_names=None):
+        limit_ma = abs(float(limit_ma))
+        current_snapshot = self.get_current_snapshot(joint_names=joint_names)
+        return {
+            joint_name: current_ma
+            for joint_name, current_ma in current_snapshot.items()
+            if abs(current_ma) >= limit_ma
+        }
 
    
     def real_to_sim(self, values):

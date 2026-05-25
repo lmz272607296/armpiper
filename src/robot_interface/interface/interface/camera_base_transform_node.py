@@ -19,6 +19,12 @@ def load_matrix(matrix_file):
     return matrix
 
 
+def apply_base_position_bias(base_point, x_bias_m):
+    base_point = np.asarray(base_point, dtype=float).copy()
+    base_point[0] += float(x_bias_m)
+    return base_point
+
+
 class CameraBaseTransformNode(Node):
     def __init__(self):
         super().__init__('camera_base_transform_node')
@@ -30,6 +36,7 @@ class CameraBaseTransformNode(Node):
         self.declare_parameter('matrix_file', 'camera_base_calibration.txt')
         self.declare_parameter('publish_invalid_detections', True)
         self.declare_parameter('log_interval_sec', 2.0)
+        self.declare_parameter('base_x_bias_m', -0.03)
 
         input_topic = self.get_parameter('input_detection_topic').value
         output_topic = self.get_parameter('output_detection_topic').value
@@ -37,6 +44,7 @@ class CameraBaseTransformNode(Node):
         self.camera_frame_id = self.get_parameter('camera_frame_id').value
         self.publish_invalid_detections = bool(self.get_parameter('publish_invalid_detections').value)
         self.log_interval_sec = float(self.get_parameter('log_interval_sec').value)
+        self.base_x_bias_m = float(self.get_parameter('base_x_bias_m').value)
         self.last_log_time = 0.0
 
         matrix_file = self.get_parameter('matrix_file').value
@@ -51,7 +59,8 @@ class CameraBaseTransformNode(Node):
 
         self.get_logger().info(
             f'固定相机坐标转换节点已启动: {input_topic} -> {output_topic}，'
-            f'{self.camera_frame_id} -> {self.base_frame_id}，矩阵={os.path.expanduser(str(matrix_file))}'
+            f'{self.camera_frame_id} -> {self.base_frame_id}，矩阵={os.path.expanduser(str(matrix_file))}，'
+            f'base_x_bias_m={self.base_x_bias_m:.3f}'
         )
 
     def detection_callback(self, msg):
@@ -112,6 +121,7 @@ class CameraBaseTransformNode(Node):
             return None
 
         base_point = self.base_from_camera @ camera_point
+        base_point = apply_base_position_bias(base_point[:3], self.base_x_bias_m)
         return {
             'x': float(base_point[0]),
             'y': float(base_point[1]),

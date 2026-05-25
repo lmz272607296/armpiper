@@ -7,12 +7,34 @@ import numpy as np
 
 
 BOTTLE_GRASP_HEIGHT = 0.15
-FRUIT_GRASP_HEIGHT = 0.15
+FRUIT_GRASP_HEIGHT = 0.18
 FRUIT_RELEASE_HEIGHT = 0.18
 DEFAULT_TABLE_Z = 0.0
 DEFAULT_BOTTLE_DIAMETER = 0.07
 DEFAULT_BOTTLE_RADIUS = DEFAULT_BOTTLE_DIAMETER * 0.5
-BOTTLE_TANGENT_Y_CLEARANCE = 0.02
+# Bottle grasp target x bias in meters.
+# Tune this single value to move the solved bottle grasp target forward/backward.
+# Negative values move the target backward (smaller x); positive values move it forward.
+BOTTLE_TARGET_X_BIAS = -0.03
+BOTTLE_TANGENT_Y_CLEARANCE = 0.0
+BOTTLE_HOVER_Y_OFFSET = 0.0
+# Bottle side-grasp angle offsets selected by bottle y position.
+# The values are in radians; use math.radians(...) to tune in degrees.
+#
+# y < -0.1           -> BOTTLE_RIGHT_APPROACH_ANGLE_OFFSET         ( 8 deg)
+# -0.1 <= y < -0.05  -> BOTTLE_RIGHT_MIDDLE_APPROACH_ANGLE_OFFSET  ( 9 deg)
+# -0.05 <= y <= 0.1  -> BOTTLE_MIDDLE_APPROACH_ANGLE_OFFSET        (11 deg)
+# 0.1 < y <= 0.2     -> BOTTLE_LEFT_APPROACH_ANGLE_OFFSET          ( 2 deg)
+# y > 0.2            -> BOTTLE_LEFT_FAR_APPROACH_ANGLE_OFFSET      (-1 deg)
+#
+# BOTTLE_APPROACH_ANGLE_OFFSET is the legacy/default offset and is kept here
+# for manual tuning or fallback use.
+BOTTLE_APPROACH_ANGLE_OFFSET = math.radians(4.0)
+BOTTLE_RIGHT_APPROACH_ANGLE_OFFSET = math.radians(8.0)
+BOTTLE_RIGHT_MIDDLE_APPROACH_ANGLE_OFFSET = math.radians(9.0)
+BOTTLE_MIDDLE_APPROACH_ANGLE_OFFSET = math.radians(6)
+BOTTLE_LEFT_APPROACH_ANGLE_OFFSET = math.radians(2.0)
+BOTTLE_LEFT_FAR_APPROACH_ANGLE_OFFSET = math.radians(-1.0)
 PALM_LINK_NAME = "palm_lower"
 BASE_LINK_NAME = "base_link"
 ARM_JOINT_NAMES = tuple(f"joint{i}" for i in range(1, 7))
@@ -142,6 +164,12 @@ def _as_point(point):
     return array[:3]
 
 
+def apply_bottle_target_bias(target_position, x_bias=BOTTLE_TARGET_X_BIAS):
+    target_position = np.asarray(target_position, dtype=float).reshape(3).copy()
+    target_position[0] += float(x_bias)
+    return target_position
+
+
 def make_bottle_model(center, endpoint_a=None, endpoint_b=None, default_radius=DEFAULT_BOTTLE_RADIUS):
     center = _as_point(center)
     endpoint_a = None if endpoint_a is None else _as_point(endpoint_a)
@@ -159,11 +187,31 @@ def make_bottle_model(center, endpoint_a=None, endpoint_b=None, default_radius=D
     return BottleModel(center=center, radius=radius, endpoint_a=endpoint_a, endpoint_b=endpoint_b)
 
 
+def bottle_approach_angle_offset_for_y(y_coord):
+    y_coord = float(y_coord)
+    # Y-axis classification for bottle side grasp approach:
+    # y > 0.2            -> left far
+    # 0.1 < y <= 0.2     -> left
+    # -0.05 <= y <= 0.1  -> middle
+    # -0.1 <= y < -0.05  -> right middle
+    # y < -0.1           -> right
+    if y_coord > 0.2:
+        return BOTTLE_LEFT_FAR_APPROACH_ANGLE_OFFSET
+    if y_coord > 0.1:
+        return BOTTLE_LEFT_APPROACH_ANGLE_OFFSET
+    if -0.1 <= y_coord < -0.05:
+        return BOTTLE_RIGHT_MIDDLE_APPROACH_ANGLE_OFFSET
+    if y_coord > -0.1:
+        return BOTTLE_MIDDLE_APPROACH_ANGLE_OFFSET
+    return BOTTLE_RIGHT_APPROACH_ANGLE_OFFSET
+
+
 def compute_bottle_grasp_position(
     bottle_model,
     table_z=DEFAULT_TABLE_Z,
     grasp_height=BOTTLE_GRASP_HEIGHT,
-    y_clearance=BOTTLE_TANGENT_Y_CLEARANCE,
+    angle_offset=None,
+    x_bias=BOTTLE_TARGET_X_BIAS,
 ):
     center_xy = np.asarray(bottle_model.center[:2], dtype=float)
     radius = float(bottle_model.radius)
@@ -173,15 +221,18 @@ def compute_bottle_grasp_position(
             f"Cannot draw tangents from base origin to bottle circle: distance={distance:.4f}, radius={radius:.4f}"
         )
 
-    distance_sq = distance * distance
-    base = ((distance_sq - radius * radius) / distance_sq) * center_xy
-    perpendicular = np.array([-center_xy[1], center_xy[0]], dtype=float)
-    tangent_offset = (radius * math.sqrt(distance_sq - radius * radius) / distance_sq) * perpendicular
-    tangent_a = base + tangent_offset
-    tangent_b = base - tangent_offset
-    tangent_xy = tangent_a if tangent_a[1] < tangent_b[1] else tangent_b
-    target = np.array([tangent_xy[0], tangent_xy[1] - y_clearance, table_z + float(grasp_height)], dtype=float)
-    return target
+    if angle_offset is None:
+        angle_offset = bottle_approach_angle_offset_for_y(center_xy[1])
+
+    tangent_angle = math.asin(radius / distance)
+    approach_angle = math.atan2(center_xy[1], center_xy[0]) - tangent_angle - float(angle_offset)
+    approach_x = distance * math.cos(approach_angle)
+    approach_y = distance * math.sin(approach_angle)
+    target = np.array(
+        [approach_x, approach_y, float(table_z) + float(grasp_height)],
+        dtype=float,
+    )
+    return apply_bottle_target_bias(target, x_bias=x_bias)
 
 
 class PiperArmKinematics:
@@ -483,7 +534,8 @@ class PiperArmIK:
     ):
         fruit_center = _as_point(fruit_center)
         target_position = np.array(
-            [fruit_center[0], fruit_center[1], fruit_center[2] + float(grasp_height)],
+            # Fruit is assumed to be resting on the table regardless of detected z.
+            [fruit_center[0], fruit_center[1], float(table_z) + float(grasp_height)],
             dtype=float,
         )
         return self.solve(
@@ -501,19 +553,10 @@ class PiperArmIK:
         release_height=FRUIT_RELEASE_HEIGHT,
         table_z=DEFAULT_TABLE_Z,
     ):
-        current_joint_positions = self.kinematics.clamp(current_joint_positions)
-        current_position, _ = self.kinematics.palm_pose(current_joint_positions)
-        target_position = np.array(
-            [current_position[0], current_position[1], float(table_z) + float(release_height)],
-            dtype=float,
-        )
-        return self.solve(
-            target_position,
-            target_palm_y=None,
-            target_palm_z=WORLD_Z_AXIS,
-            seed=current_joint_positions,
-            locked_joints={"joint4": 0.0, "joint6": 0.0},
-            orientation_weight=1.0,
+        return self.solve_vertical_release(
+            current_joint_positions,
+            release_height=release_height,
+            table_z=table_z,
         )
 
     def solve_bottle_grasp(
@@ -523,6 +566,7 @@ class PiperArmIK:
         table_z=DEFAULT_TABLE_Z,
         grasp_height=BOTTLE_GRASP_HEIGHT,
         diameter=DEFAULT_BOTTLE_DIAMETER,
+        angle_offset=None,
     ):
         if isinstance(bottle_center, BottleModel):
             bottle_model = bottle_center
@@ -532,65 +576,31 @@ class PiperArmIK:
             bottle_model,
             table_z=table_z,
             grasp_height=grasp_height,
+            angle_offset=angle_offset,
         )
         return self.solve(target_position, seed=seed)
 
-    def solve_release(self, current_joint_positions, release_height, table_z=DEFAULT_TABLE_Z):
+    def solve_vertical_release(self, current_joint_positions, release_height, table_z=DEFAULT_TABLE_Z):
         current_joint_positions = self.kinematics.clamp(current_joint_positions)
         current_position, current_rotation = self.kinematics.palm_pose(current_joint_positions)
-        target_z = table_z + float(release_height)
-        target_palm_y = current_rotation[:, 1]
+        target_position = np.array(
+            [current_position[0], current_position[1], float(table_z) + float(release_height)],
+            dtype=float,
+        )
+        return self.solve(
+            target_position,
+            target_palm_y=current_rotation[:, 1],
+            target_palm_z=current_rotation[:, 2],
+            seed=current_joint_positions,
+            orientation_weight=1.0,
+        )
 
-        offsets = [
-            (0.0, 0.0),
-            (0.01, 0.0),
-            (-0.01, 0.0),
-            (0.0, 0.01),
-            (0.0, -0.01),
-            (0.02, 0.0),
-            (-0.02, 0.0),
-            (0.0, 0.02),
-            (0.0, -0.02),
-            (0.03, 0.0),
-            (-0.03, 0.0),
-            (0.0, 0.03),
-            (0.0, -0.03),
-        ]
-
-        best = None
-        for offset_x, offset_y in offsets:
-            target_position = np.array(
-                [current_position[0] + offset_x, current_position[1] + offset_y, target_z],
-                dtype=float,
-            )
-            result = self.solve(
-                target_position,
-                target_palm_y=target_palm_y,
-                seed=current_joint_positions,
-                orientation_weight=0.35,
-            )
-            if best is None or result.score < best.score:
-                best = result
-            if result.success:
-                return result
-
-        best_position_only = None
-        for offset_x, offset_y in offsets:
-            target_position = np.array(
-                [current_position[0] + offset_x, current_position[1] + offset_y, target_z],
-                dtype=float,
-            )
-            result = self.solve(target_position, target_palm_y=None, seed=current_joint_positions)
-            if best_position_only is None or result.score < best_position_only.score:
-                best_position_only = result
-            if result.success:
-                return result
-
-        if best_position_only is not None and (
-            best is None or best_position_only.position_error < best.position_error
-        ):
-            return best_position_only
-        return best
+    def solve_release(self, current_joint_positions, release_height, table_z=DEFAULT_TABLE_Z):
+        return self.solve_vertical_release(
+            current_joint_positions,
+            release_height=release_height,
+            table_z=table_z,
+        )
 
 
 def demo_points():
