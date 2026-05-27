@@ -1,38 +1,48 @@
 import numpy as np
 
 
+HAND_JOINT_NAMES = (
+    'hand0', 'hand1', 'hand2', 'hand3',
+    'hand4', 'hand5', 'hand6', 'hand7',
+    'hand8', 'hand9', 'hand10', 'hand11',
+    'hand12', 'hand13', 'hand14', 'hand15',
+)
 GRASP_HAND_JOINT_INDICES = (1, 5)
 THUMB_HAND_JOINT_INDICES = (12, 13)
-DEFAULT_FIXED_HAND_RADIANS = np.array([
-    -1.036,   # Joint0  fixed angle:  -59.359 deg
-    0.422,    # Joint1  fixed base angle: 24.179 deg, plus open/close offset
-    2.356,    # Joint2  fixed angle:  135.005 deg
-    0.490,    # Joint3  fixed angle:   28.075 deg
-    -0.055,   # Joint4  fixed angle:   -3.151 deg
-    0.595,    # Joint5  fixed base angle: 34.091 deg, plus open/close offset
-    1.161,    # Joint6  fixed angle:   66.521 deg
-    1.493,    # Joint7  fixed angle:   85.542 deg
-    0.23635,  # Joint8  fixed angle:   13.542 deg
-    -0.34515, # Joint9  fixed angle:  -19.775 deg
-    1.43804,  # Joint10 fixed angle:   82.393 deg
-    1.87391,  # Joint11 fixed angle:  107.367 deg
-    0.744,    # Joint12 overridden below by thumb trajectory
-    -0.262,   # Joint13 overridden below by thumb trajectory
-    1.3727,   # Joint14 fixed angle:   78.650 deg
-    0.842,    # Joint15 fixed angle:   48.243 deg
-], dtype=np.float64)
+DEFAULT_FIXED_HAND_RADIANS_BY_NAME = {
+    'hand0': -1.0017,
+    'hand1': 0.3791,
+    'hand2': 1.8985,
+    'hand3': 0.5556,
+    'hand4': -0.5768,
+    'hand5': 0.1842,
+    'hand6': 1.8125,
+    'hand7': 1.3429,
+    'hand8': 0.8456,
+    'hand9': 0.9132,
+    'hand10': 1.9230,
+    'hand11': 0.0967,
+    'hand12': 1.1771,
+    'hand13': -0.2393,
+    'hand14': 1.2017,
+    'hand15': 0.8487,
+}
+DEFAULT_FIXED_HAND_RADIANS = np.array(
+    [DEFAULT_FIXED_HAND_RADIANS_BY_NAME[joint_name] for joint_name in HAND_JOINT_NAMES],
+    dtype=np.float64,
+)
 THUMB_INITIAL_DEGREES = np.array([
-    228.0,  # Joint12 raw initial angle
-    171.0,  # Joint13 raw initial angle
+    247.45,  # Joint12 raw initial angle, for reference only
+    166.29,  # Joint13 raw initial angle, for reference only
 ], dtype=np.float64)
 THUMB_TARGET_DEGREES = np.array([
     188.0,  # Joint12 raw target angle
     202.0,  # Joint13 raw target angle
 ], dtype=np.float64)
 # Thumb joints are sent after subtracting 180 deg.
-# Sent initial angles: Joint12=48 deg, Joint13=-9 deg.
+# Sent initial angles: Joint12=67.45 deg, Joint13=-13.71 deg.
 # Sent target angles: Joint12=8 deg, Joint13=22 deg.
-THUMB_INITIAL_RADIANS = np.deg2rad(THUMB_INITIAL_DEGREES - 180.0)
+THUMB_INITIAL_RADIANS = np.array([1.1771, -0.2393], dtype=np.float64)
 THUMB_TARGET_RADIANS = np.deg2rad(THUMB_TARGET_DEGREES - 180.0)
 
 

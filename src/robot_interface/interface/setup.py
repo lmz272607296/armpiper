@@ -58,11 +58,12 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
-        'ultimate_yolo_node_cpu=interface.ultimate_yolo_node_cpu:main',
-         'position_player=interface.position_player:main',
-         'action1_4_move=interface.action1_4_move:main',
-         'action5_rot=interface.action5_rot:main',
-         'action6_gsp=interface.action6_gsp:main',
+         'ultimate_yolo_node_cpu=interface.ultimate_yolo_node_cpu:main',
+          'position_player=interface.position_player:main',
+         'position_record=interface.position_record:main',
+          'action1_4_move=interface.action1_4_move:main',
+          'action5_rot=interface.action5_rot:main',
+          'action6_gsp=interface.action6_gsp:main',
         'action7_flat=interface.action7_flat:main',
         'action8_rst=interface.action8_rst:main',
         'eye_in_hand_calibration_node=interface.eye_in_hand_calibration_node:main',

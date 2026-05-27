@@ -11,31 +11,49 @@ from sensor_msgs.msg import JointState
 
 from interface.arm_controller import LeapArm
 from interface.hand_controller import LeapHand
+from interface.position_record import (
+    DEFAULT_HAND_INITIAL_POSE_DEG as RECORD_DEFAULT_HAND_INITIAL_POSE_DEG,
+    DEFAULT_HAND_POSITION_BIAS_DEG as RECORD_DEFAULT_HAND_POSITION_BIAS_DEG,
+    INITIAL_POSITION_OFFSET_DEG,
+)
 from interface.position_player_trajectory import build_fixed_chopstick_trajectory, validate_chopstick_angles
 
 
 DEFAULT_DATA_DIR = os.path.join(os.path.dirname(__file__), 'data')
 DEFAULT_DATA_FILE = ''
-DEFAULT_PLAY_RATE_HZ = 5.0
+DEFAULT_PLAY_RATE_HZ = 10.0
 DEFAULT_START_INDEX = 0
 DEFAULT_END_INDEX = -1
 DEFAULT_LOOP = False
-DEFAULT_HAND_POSITION_BIAS = [
-    0.0, 0.0, 0.0, 0.1,
-    0.0, 0.0, 0.0, 0.0,
-    0.0, 0.0, 0.0, 0.0,
-    0.0, 0.0, 0.0, 0.05,
-]
+DEFAULT_TRAJECTORY_INCLUDES_HAND_POSITION_BIAS = True
+DEFAULT_HAND_INITIAL_POSE_DEG = list(RECORD_DEFAULT_HAND_INITIAL_POSE_DEG)
+
+# 直接复用录制端默认偏置，避免两处配置漂移。
+DEFAULT_HAND_POSITION_BIAS = list(RECORD_DEFAULT_HAND_POSITION_BIAS_DEG)
 DEFAULT_ENABLE_INITIAL_MOVE = True
 DEFAULT_JOINT_STATES_TOPIC = '/hand_joint_states'
-DEFAULT_INITIAL_MOVE_DURATION_SEC = 4.0
+DEFAULT_INITIAL_MOVE_DURATION_SEC = 2.0
 DEFAULT_INITIAL_MOVE_RATE_HZ = 20.0
-DEFAULT_INITIAL_HOLD_SEC = 5.0
+DEFAULT_INITIAL_HOLD_SEC = 0.0
 DEFAULT_ENABLE_WRIST_ALIGNMENT = True
 DEFAULT_WRIST_JOINT6_TARGET = 2.07
 DEFAULT_USE_FIXED_CHOPSTICK_TRAJECTORY = True
-DEFAULT_CHOPSTICK_OPEN_ANGLE_DEG = 25.0
-DEFAULT_CHOPSTICK_CLOSE_ANGLE_DEG = 10.0
+DEFAULT_CHOPSTICK_OPEN_ANGLE_DEG = 40.0
+DEFAULT_CHOPSTICK_CLOSE_ANGLE_DEG = 15.0
+DEFAULT_ENABLE_HAND_CURRENT_LIMIT = True
+DEFAULT_HAND_CURRENT_LIMIT_MA = 450.0
+DEFAULT_CURRENT_LIMIT_CHECK_RATE_HZ = 20.0
+DEFAULT_CURRENT_LIMIT_COMMAND_DURATION_SEC = 0.05
+PLAYBACK_MODE_FIXED = 'fixed'
+PLAYBACK_MODE_RECORDED = 'recorded'
+REFERENCE_CHOPSTICK_ROTATION_DEG = 40.0
+REFERENCE_KEY_JOINT_END_POSE = {
+    'hand1': 0.1274,
+    'hand5': 0.0107,
+    'hand12': 0.4880,
+    'hand13': 0.0107,
+    'hand15': 0.5878,
+}
 
 
 class PositionPlayer(Node):
@@ -51,6 +69,7 @@ class PositionPlayer(Node):
         self.hand_controller = hand_controller
         self.arm_controller = arm_controller
         self.hand_order_indices = np.asarray(self.hand_controller.real_to_sim_indices, dtype=np.int64)
+        self.playback_mode = prompt_playback_mode()
 
         self.declare_parameter('data_file', DEFAULT_DATA_FILE)
         self.declare_parameter('data_dir', DEFAULT_DATA_DIR)
@@ -58,6 +77,10 @@ class PositionPlayer(Node):
         self.declare_parameter('start_index', DEFAULT_START_INDEX)
         self.declare_parameter('end_index', DEFAULT_END_INDEX)
         self.declare_parameter('loop', DEFAULT_LOOP)
+        self.declare_parameter(
+            'trajectory_includes_hand_position_bias',
+            DEFAULT_TRAJECTORY_INCLUDES_HAND_POSITION_BIAS,
+        )
         self.declare_parameter(
             'hand_position_bias',
             DEFAULT_HAND_POSITION_BIAS,
@@ -73,6 +96,8 @@ class PositionPlayer(Node):
         self.declare_parameter('use_fixed_chopstick_trajectory', DEFAULT_USE_FIXED_CHOPSTICK_TRAJECTORY)
         self.declare_parameter('chopstick_open_angle_deg', DEFAULT_CHOPSTICK_OPEN_ANGLE_DEG)
         self.declare_parameter('chopstick_close_angle_deg', DEFAULT_CHOPSTICK_CLOSE_ANGLE_DEG)
+        self.declare_parameter('enable_hand_current_limit', DEFAULT_ENABLE_HAND_CURRENT_LIMIT)
+        self.declare_parameter('hand_current_limit_ma', DEFAULT_HAND_CURRENT_LIMIT_MA)
 
         self.data_file = self.get_parameter('data_file').value
         self.data_dir = self.get_parameter('data_dir').value
@@ -80,6 +105,9 @@ class PositionPlayer(Node):
         self.start_index = int(self.get_parameter('start_index').value)
         self.end_index = int(self.get_parameter('end_index').value)
         self.loop = bool(self.get_parameter('loop').value)
+        self.trajectory_includes_hand_position_bias = bool(
+            self.get_parameter('trajectory_includes_hand_position_bias').value
+        )
         self.hand_position_bias = self.parse_hand_position_bias(
             self.get_parameter('hand_position_bias').value
         )
@@ -95,6 +123,9 @@ class PositionPlayer(Node):
         )
         self.chopstick_open_angle_deg = float(self.get_parameter('chopstick_open_angle_deg').value)
         self.chopstick_close_angle_deg = float(self.get_parameter('chopstick_close_angle_deg').value)
+        self.enable_hand_current_limit = bool(self.get_parameter('enable_hand_current_limit').value)
+        self.hand_current_limit_ma = float(self.get_parameter('hand_current_limit_ma').value)
+        self.use_fixed_chopstick_trajectory = (self.playback_mode == PLAYBACK_MODE_FIXED)
 
         if self.play_rate_hz <= 0.0:
             raise ValueError(f'play_rate_hz must be positive, got {self.play_rate_hz}')
@@ -102,11 +133,13 @@ class PositionPlayer(Node):
             raise ValueError(f'initial_move_rate_hz must be positive, got {self.initial_move_rate_hz}')
         if self.initial_hold_sec < 0.0:
             raise ValueError(f'initial_hold_sec must be non-negative, got {self.initial_hold_sec}')
+        if self.enable_hand_current_limit and self.hand_current_limit_ma <= 0.0:
+            raise ValueError(
+                f'hand_current_limit_ma must be positive, got {self.hand_current_limit_ma}'
+            )
         validate_chopstick_angles(self.chopstick_open_angle_deg, self.chopstick_close_angle_deg)
 
-        self.trajectory = self.map_real_hand_to_controller_order(
-            self.apply_hand_position_bias(self.build_hand_trajectory(self.load_trajectory()))
-        )
+        self.trajectory = self.prepare_trajectory_for_playback()
         self.current_index = 0
         self.latest_joint_sample = None
         self.startup_joint_sample = None
@@ -115,6 +148,10 @@ class PositionPlayer(Node):
         self.playback_state = 'playing'
         self.initial_move_finish_time = None
         self.initial_hold_finish_time = None
+        self.controller_index_by_hand_name = self.build_controller_index_by_hand_name()
+        self.locked_joint_positions = np.full(len(self.HAND_JOINT_NAMES), np.nan, dtype=np.float64)
+        self.last_published_sample = None
+        self.current_limit_data_unavailable_logged = False
 
         qos_profile = QoSProfile(
             depth=10,
@@ -132,19 +169,35 @@ class PositionPlayer(Node):
             self.playback_state = 'waiting_for_initial_state'
 
         self.timer = self.create_timer(1.0 / self.play_rate_hz, self.publish_next_sample)
+        self.current_limit_timer = None
+        if self.enable_hand_current_limit:
+            self.current_limit_timer = self.create_timer(
+                1.0 / DEFAULT_CURRENT_LIMIT_CHECK_RATE_HZ,
+                self.monitor_hand_currents,
+            )
 
         self.get_logger().info(
             f'Loaded {self.trajectory.shape[0]} samples from {self.data_file}; '
             f'playing at {self.play_rate_hz:.2f} Hz.'
         )
-        if self.use_fixed_chopstick_trajectory:
+        if self.playback_mode == PLAYBACK_MODE_FIXED:
             self.get_logger().info(
-                'Using fixed chopstick trajectory: only hand1/hand5 move, '
+                'Using fixed matrix playback mode: only key chopstick joints move, '
                 f'open={self.chopstick_open_angle_deg:.2f} deg, '
                 f'close={self.chopstick_close_angle_deg:.2f} deg.'
             )
+        else:
+            self.get_logger().info('Using recorded trajectory playback mode.')
         if np.any(self.hand_position_bias != 0.0):
             self.get_logger().info(f'Using hand position bias: {self.hand_position_bias.tolist()}')
+        if self.playback_mode == PLAYBACK_MODE_RECORDED and self.trajectory_includes_hand_position_bias:
+            self.get_logger().info(
+                'Recorded trajectory already includes hand_position_bias; skipping extra bias during playback.'
+            )
+        if self.enable_hand_current_limit:
+            self.get_logger().info(
+                f'Per-joint hand current limit enabled at {self.hand_current_limit_ma:.1f} mA.'
+            )
         if self.playback_state == 'waiting_for_initial_state':
             startup_actions = []
             if self.enable_initial_move:
@@ -175,6 +228,28 @@ class PositionPlayer(Node):
 
         self.data_file = data_file
         return trajectory[start:end]
+
+    def select_source_trajectory(self):
+        trajectory = self.load_trajectory()
+        if self.playback_mode == PLAYBACK_MODE_FIXED:
+            return self.build_hand_trajectory(trajectory)
+        return trajectory
+
+    def prepare_trajectory_for_playback(self):
+        trajectory = self.select_source_trajectory()
+        if self.should_apply_hand_position_bias():
+            trajectory = self.apply_hand_position_bias(trajectory)
+        return self.map_real_hand_to_controller_order(trajectory)
+
+    def should_apply_hand_position_bias(self):
+        playback_mode = getattr(self, 'playback_mode', PLAYBACK_MODE_RECORDED)
+        if playback_mode == PLAYBACK_MODE_FIXED:
+            return True
+        return not getattr(
+            self,
+            'trajectory_includes_hand_position_bias',
+            DEFAULT_TRAJECTORY_INCLUDES_HAND_POSITION_BIAS,
+        )
 
     def resolve_data_file(self, data_file):
         if data_file:
@@ -236,7 +311,7 @@ class PositionPlayer(Node):
                 value = value[1:-1]
             value = [float(item.strip()) for item in value.split(',') if item.strip()]
 
-        bias = np.array(value, dtype=np.float64)
+        bias = np.deg2rad(np.array(value, dtype=np.float64))
         if bias.shape != (16,):
             raise ValueError(f'hand_position_bias must contain 16 values, got shape {bias.shape}')
         return bias
@@ -250,11 +325,197 @@ class PositionPlayer(Node):
         if not self.use_fixed_chopstick_trajectory:
             return trajectory
 
-        return build_fixed_chopstick_trajectory(
+        fixed_trajectory = build_fixed_chopstick_trajectory(
             trajectory.shape[0],
             self.chopstick_open_angle_deg,
             self.chopstick_close_angle_deg,
         )
+        fixed_trajectory = self.apply_key_joint_rotation_targets(fixed_trajectory)
+        return self.align_fixed_trajectory_to_initial_pose(fixed_trajectory)
+
+    def align_fixed_trajectory_to_initial_pose(self, trajectory):
+        aligned_trajectory = np.asarray(trajectory, dtype=np.float64).copy()
+        if aligned_trajectory.shape[0] == 0:
+            return aligned_trajectory
+
+        desired_start_pose = np.deg2rad(
+            np.asarray(DEFAULT_HAND_INITIAL_POSE_DEG, dtype=np.float64) - INITIAL_POSITION_OFFSET_DEG
+        )
+        start_delta = desired_start_pose - aligned_trajectory[0, :16]
+        aligned_trajectory[:, :16] += start_delta
+        return aligned_trajectory
+
+    def apply_key_joint_rotation_targets(self, trajectory):
+        sample_count = trajectory.shape[0]
+        if sample_count <= 1:
+            return trajectory
+
+        reference_scale = np.float64(REFERENCE_CHOPSTICK_ROTATION_DEG)
+        if reference_scale <= 0.0:
+            raise ValueError(
+                f'REFERENCE_CHOPSTICK_ROTATION_DEG must be positive, got {reference_scale}'
+            )
+
+        joint_index_by_name = {name: index for index, name in enumerate(self.HAND_JOINT_NAMES)}
+        start_pose = trajectory[0].copy()
+        key_joint_deltas = {
+            joint_name: REFERENCE_KEY_JOINT_END_POSE[joint_name] - start_pose[joint_index_by_name[joint_name]]
+            for joint_name in REFERENCE_KEY_JOINT_END_POSE
+        }
+
+        transition_count = sample_count - 1
+        open_count = max(1, transition_count // 2)
+        close_count = transition_count - open_count
+        open_alpha = self.smooth_alpha(open_count + 1)[1:]
+        close_alpha = self.smooth_alpha(close_count + 1)[1:]
+        open_scale = self.chopstick_open_angle_deg / reference_scale
+        close_scale = self.chopstick_close_angle_deg / reference_scale
+
+        adjusted_trajectory = trajectory.copy()
+        for joint_name, reference_delta in key_joint_deltas.items():
+            joint_index = joint_index_by_name[joint_name]
+            joint_start = start_pose[joint_index]
+            joint_open_target = joint_start + reference_delta * open_scale
+            joint_close_target = joint_start + reference_delta * close_scale
+
+            if open_count > 0:
+                adjusted_trajectory[1:open_count + 1, joint_index] = (
+                    joint_start + (joint_open_target - joint_start) * open_alpha
+                )
+
+            if close_count > 0:
+                adjusted_trajectory[open_count + 1:, joint_index] = (
+                    joint_open_target + (joint_close_target - joint_open_target) * close_alpha
+                )
+
+        return adjusted_trajectory
+
+    def smooth_alpha(self, count):
+        if count <= 1:
+            return np.array([1.0], dtype=np.float64)
+
+        alpha = np.linspace(0.0, 1.0, count, dtype=np.float64)
+        return alpha * alpha * (3.0 - 2.0 * alpha)
+
+    def build_controller_index_by_hand_name(self):
+        controller_index_by_real_index = np.argsort(self.hand_order_indices)
+        return {
+            hand_name: int(controller_index_by_real_index[real_index])
+            for real_index, hand_name in enumerate(self.HAND_JOINT_NAMES)
+        }
+
+    def normalize_current_joint_name(self, joint_name):
+        name = str(joint_name).strip().lower()
+        for prefix in ('hand', 'dxl'):
+            if not name.startswith(prefix):
+                continue
+
+            suffix = name[len(prefix):]
+            if not suffix.isdigit():
+                return None
+
+            joint_index = int(suffix)
+            if 0 <= joint_index < len(self.HAND_JOINT_NAMES):
+                return f'hand{joint_index}'
+            return None
+
+        return None
+
+    def get_hand_current_snapshot(self):
+        get_current_snapshot = getattr(self.hand_controller, 'get_current_snapshot', None)
+        if get_current_snapshot is None:
+            if not self.current_limit_data_unavailable_logged:
+                self.get_logger().warn('Hand current snapshot interface is unavailable; current limiting is disabled.')
+                self.current_limit_data_unavailable_logged = True
+            return {}
+
+        hand_currents = {}
+        for joint_name, current_ma in get_current_snapshot().items():
+            hand_name = self.normalize_current_joint_name(joint_name)
+            if hand_name is None:
+                continue
+            hand_currents[hand_name] = float(current_ma)
+        return hand_currents
+
+    def resolve_locked_joint_position(self, controller_index, fallback_sample=None):
+        candidates = [
+            self.latest_joint_sample,
+            self.last_published_sample,
+            fallback_sample,
+        ]
+        for candidate in candidates:
+            if candidate is None:
+                continue
+            candidate_array = np.asarray(candidate, dtype=np.float64).reshape(-1)
+            if controller_index >= candidate_array.shape[0]:
+                continue
+            if np.isfinite(candidate_array[controller_index]):
+                return float(candidate_array[controller_index])
+        return None
+
+    def update_current_limited_joints(self, fallback_sample=None):
+        if not getattr(self, 'enable_hand_current_limit', True):
+            return {}
+
+        newly_locked = {}
+        for joint_name, current_ma in self.get_hand_current_snapshot().items():
+            hand_name = self.normalize_current_joint_name(joint_name) or str(joint_name)
+            if abs(current_ma) < self.hand_current_limit_ma:
+                continue
+
+            controller_index = self.controller_index_by_hand_name.get(hand_name)
+            if controller_index is None:
+                continue
+            if np.isfinite(self.locked_joint_positions[controller_index]):
+                continue
+
+            locked_position = self.resolve_locked_joint_position(controller_index, fallback_sample=fallback_sample)
+            if locked_position is None:
+                continue
+
+            self.locked_joint_positions[controller_index] = locked_position
+            newly_locked[hand_name] = float(current_ma)
+            self.get_logger().warn(
+                f'Current limit hit on {hand_name}: {current_ma:.1f} mA >= {self.hand_current_limit_ma:.1f} mA. '
+                f'Locking this joint at {locked_position:.4f} rad while other joints continue.'
+            )
+
+        return newly_locked
+
+    def apply_current_limit_locks(self, sample):
+        limited_sample = np.asarray(sample, dtype=np.float64).copy()
+        locked_mask = np.isfinite(self.locked_joint_positions)
+        limited_sample[locked_mask] = self.locked_joint_positions[locked_mask]
+        return limited_sample
+
+    def publish_current_limit_override(self):
+        if self.last_published_sample is None:
+            return True
+
+        limited_sample = self.apply_current_limit_locks(self.last_published_sample)
+        if np.allclose(limited_sample, self.last_published_sample, atol=1e-6, rtol=0.0):
+            return True
+
+        hand_pose = np.reshape(limited_sample, (1, 16))
+        hand_ok = self.hand_controller.command_joint_position(
+            hand_pose,
+            DEFAULT_CURRENT_LIMIT_COMMAND_DURATION_SEC,
+        )
+        if hand_ok:
+            self.last_published_sample = limited_sample.copy()
+        return hand_ok
+
+    def monitor_hand_currents(self):
+        if self.playback_state != 'playing':
+            return
+
+        newly_locked = self.update_current_limited_joints()
+        if not newly_locked:
+            return
+
+        if not self.publish_current_limit_override():
+            self.get_logger().error('Failed to publish per-joint current-limit override command.')
+            rclpy.shutdown()
 
     def map_real_hand_to_controller_order(self, trajectory):
         return trajectory[:, self.hand_order_indices]
@@ -425,7 +686,9 @@ class PositionPlayer(Node):
             self.handle_finished_trajectory()
             return
 
-        sample = self.trajectory[self.current_index]
+        sample = np.asarray(self.trajectory[self.current_index], dtype=np.float64).copy()
+        self.update_current_limited_joints(fallback_sample=sample)
+        sample = self.apply_current_limit_locks(sample)
         hand_pose = np.reshape(sample[:16], (1, 16))
         speed = 1.0 / self.play_rate_hz
 
@@ -435,9 +698,23 @@ class PositionPlayer(Node):
             rclpy.shutdown()
             return
 
+        self.last_published_sample = sample.copy()
         self.current_index += 1
         if self.current_index >= self.trajectory.shape[0]:
             self.handle_finished_trajectory()
+
+
+def prompt_playback_mode(input_func=input):
+    while True:
+        user_input = input_func(
+            'Select playback mode: 1=fixed matrix, 2=recorded data: '
+        ).strip()
+        if user_input == '1':
+            return PLAYBACK_MODE_FIXED
+        if user_input == '2':
+            return PLAYBACK_MODE_RECORDED
+
+        print('Invalid input. Please enter 1 for fixed matrix or 2 for recorded data.')
 
 
 def main(args=None):

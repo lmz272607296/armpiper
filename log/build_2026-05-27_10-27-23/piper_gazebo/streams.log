@@ -1,0 +1,53 @@
+[1.096s] Invoking command in '/home/lmz/armpiper/build/piper_gazebo': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/home/lmz/armpiper/install/vla:/home/lmz/armpiper/install/interface:/home/lmz/armpiper/install/piper:/home/lmz/armpiper/install/leapsim:/home/lmz/armpiper/install/follow:/home/lmz/armpiper/install/arm_control_pkg:/opt/ros/humble /usr/bin/cmake /home/lmz/armpiper/src/piper_ros/piper_sim/piper_gazebo -DAMENT_CMAKE_SYMLINK_INSTALL=1 -DCMAKE_INSTALL_PREFIX=/home/lmz/armpiper/install/piper_gazebo
+[1.139s] -- The C compiler identification is GNU 11.4.0
+[1.198s] -- The CXX compiler identification is GNU 11.4.0
+[1.206s] -- Detecting C compiler ABI info
+[1.257s] -- Detecting C compiler ABI info - done
+[1.263s] -- Check for working C compiler: /usr/bin/cc - skipped
+[1.263s] -- Detecting C compile features
+[1.263s] -- Detecting C compile features - done
+[1.266s] -- Detecting CXX compiler ABI info
+[1.317s] -- Detecting CXX compiler ABI info - done
+[1.323s] -- Check for working CXX compiler: /usr/bin/c++ - skipped
+[1.323s] -- Detecting CXX compile features
+[1.323s] -- Detecting CXX compile features - done
+[1.325s] -- Found ament_cmake: 1.3.11 (/opt/ros/humble/share/ament_cmake/cmake)
+[1.483s] -- Found Python3: /usr/bin/python3 (found version "3.10.12") found components: Interpreter 
+[1.665s] -- Override CMake install command with custom implementation using symlinks instead of copying resources
+[1.743s] -- Found ament_lint_auto: 0.12.12 (/opt/ros/humble/share/ament_lint_auto/cmake)
+[1.952s] -- Added test 'copyright' to check source files copyright and LICENSE
+[1.959s] -- Added test 'flake8' to check Python code syntax and style conventions
+[1.961s] -- Added test 'lint_cmake' to check CMake code style
+[1.962s] -- Added test 'pep257' to check Python code against some of the docstring style conventions in PEP 257
+[1.971s] -- Added test 'xmllint' to check XML markup files
+[1.971s] -- Configuring done
+[1.974s] -- Generating done
+[1.978s] -- Build files have been written to: /home/lmz/armpiper/build/piper_gazebo
+[1.988s] Invoked command in '/home/lmz/armpiper/build/piper_gazebo' returned '0': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/home/lmz/armpiper/install/vla:/home/lmz/armpiper/install/interface:/home/lmz/armpiper/install/piper:/home/lmz/armpiper/install/leapsim:/home/lmz/armpiper/install/follow:/home/lmz/armpiper/install/arm_control_pkg:/opt/ros/humble /usr/bin/cmake /home/lmz/armpiper/src/piper_ros/piper_sim/piper_gazebo -DAMENT_CMAKE_SYMLINK_INSTALL=1 -DCMAKE_INSTALL_PREFIX=/home/lmz/armpiper/install/piper_gazebo
+[1.989s] Invoking command in '/home/lmz/armpiper/build/piper_gazebo': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/home/lmz/armpiper/install/vla:/home/lmz/armpiper/install/interface:/home/lmz/armpiper/install/piper:/home/lmz/armpiper/install/leapsim:/home/lmz/armpiper/install/follow:/home/lmz/armpiper/install/arm_control_pkg:/opt/ros/humble /usr/bin/cmake --build /home/lmz/armpiper/build/piper_gazebo -- -j16 -l16
+[2.080s] Invoked command in '/home/lmz/armpiper/build/piper_gazebo' returned '0': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/home/lmz/armpiper/install/vla:/home/lmz/armpiper/install/interface:/home/lmz/armpiper/install/piper:/home/lmz/armpiper/install/leapsim:/home/lmz/armpiper/install/follow:/home/lmz/armpiper/install/arm_control_pkg:/opt/ros/humble /usr/bin/cmake --build /home/lmz/armpiper/build/piper_gazebo -- -j16 -l16
+[2.084s] Invoking command in '/home/lmz/armpiper/build/piper_gazebo': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/home/lmz/armpiper/install/vla:/home/lmz/armpiper/install/interface:/home/lmz/armpiper/install/piper:/home/lmz/armpiper/install/leapsim:/home/lmz/armpiper/install/follow:/home/lmz/armpiper/install/arm_control_pkg:/opt/ros/humble /usr/bin/cmake --install /home/lmz/armpiper/build/piper_gazebo
+[2.093s] -- Install configuration: ""
+[2.093s] -- Execute custom install script
+[2.093s] -- Symlinking: /home/lmz/armpiper/install/piper_gazebo/share/piper_gazebo/launch/piper_no_gripper/piper_no_gripper_gazebo.launch.py
+[2.104s] -- Symlinking: /home/lmz/armpiper/install/piper_gazebo/share/piper_gazebo/launch/piper_with_gripper/piper_gazebo.launch.py
+[2.127s] -- Symlinking: /home/lmz/armpiper/install/piper_gazebo/share/piper_gazebo/config/ros2_controllers.yaml
+[2.145s] -- Symlinking: /home/lmz/armpiper/install/piper_gazebo/share/piper_gazebo/config/ros2_no_gripper_controllers.yaml
+[2.179s] -- Symlinking: /home/lmz/armpiper/install/piper_gazebo/share/piper_gazebo/scripts/joint8_ctrl.py
+[2.200s] -- Symlinking: /home/lmz/armpiper/install/piper_gazebo/lib/piper_gazebo/joint8_ctrl.py
+[2.225s] -- Symlinking: /home/lmz/armpiper/install/piper_gazebo/share/ament_index/resource_index/package_run_dependencies/piper_gazebo
+[2.247s] -- Symlinking: /home/lmz/armpiper/install/piper_gazebo/share/ament_index/resource_index/parent_prefix_path/piper_gazebo
+[2.263s] -- Symlinking: /home/lmz/armpiper/install/piper_gazebo/share/piper_gazebo/environment/ament_prefix_path.sh
+[2.285s] -- Symlinking: /home/lmz/armpiper/install/piper_gazebo/share/piper_gazebo/environment/ament_prefix_path.dsv
+[2.306s] -- Symlinking: /home/lmz/armpiper/install/piper_gazebo/share/piper_gazebo/environment/path.sh
+[2.323s] -- Symlinking: /home/lmz/armpiper/install/piper_gazebo/share/piper_gazebo/environment/path.dsv
+[2.347s] -- Symlinking: /home/lmz/armpiper/install/piper_gazebo/share/piper_gazebo/local_setup.bash
+[2.352s] -- Symlinking: /home/lmz/armpiper/install/piper_gazebo/share/piper_gazebo/local_setup.sh
+[2.366s] -- Symlinking: /home/lmz/armpiper/install/piper_gazebo/share/piper_gazebo/local_setup.zsh
+[2.380s] -- Symlinking: /home/lmz/armpiper/install/piper_gazebo/share/piper_gazebo/local_setup.dsv
+[2.390s] -- Symlinking: /home/lmz/armpiper/install/piper_gazebo/share/piper_gazebo/package.dsv
+[2.405s] -- Symlinking: /home/lmz/armpiper/install/piper_gazebo/share/ament_index/resource_index/packages/piper_gazebo
+[2.431s] -- Symlinking: /home/lmz/armpiper/install/piper_gazebo/share/piper_gazebo/cmake/piper_gazeboConfig.cmake
+[2.443s] -- Symlinking: /home/lmz/armpiper/install/piper_gazebo/share/piper_gazebo/cmake/piper_gazeboConfig-version.cmake
+[2.465s] -- Symlinking: /home/lmz/armpiper/install/piper_gazebo/share/piper_gazebo/package.xml
+[2.487s] Invoked command in '/home/lmz/armpiper/build/piper_gazebo' returned '0': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/home/lmz/armpiper/install/vla:/home/lmz/armpiper/install/interface:/home/lmz/armpiper/install/piper:/home/lmz/armpiper/install/leapsim:/home/lmz/armpiper/install/follow:/home/lmz/armpiper/install/arm_control_pkg:/opt/ros/humble /usr/bin/cmake --install /home/lmz/armpiper/build/piper_gazebo

@@ -1,0 +1,259 @@
+[0.036s] Invoking command in '/home/lmz/armpiper/build/piper_msgs': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/home/lmz/armpiper/install/vla:/home/lmz/armpiper/install/interface:/home/lmz/armpiper/install/piper:/home/lmz/armpiper/install/leapsim:/home/lmz/armpiper/install/follow:/home/lmz/armpiper/install/arm_control_pkg:/opt/ros/humble /usr/bin/cmake /home/lmz/armpiper/src/piper_ros/piper_msgs -DAMENT_CMAKE_SYMLINK_INSTALL=1 -DCMAKE_INSTALL_PREFIX=/home/lmz/armpiper/install/piper_msgs
+[1.132s] -- The C compiler identification is GNU 11.4.0
+[1.132s] -- The CXX compiler identification is GNU 11.4.0
+[1.132s] -- Detecting C compiler ABI info
+[1.132s] -- Detecting C compiler ABI info - done
+[1.132s] -- Check for working C compiler: /usr/bin/cc - skipped
+[1.132s] -- Detecting C compile features
+[1.132s] -- Detecting C compile features - done
+[1.132s] -- Detecting CXX compiler ABI info
+[1.132s] -- Detecting CXX compiler ABI info - done
+[1.132s] -- Check for working CXX compiler: /usr/bin/c++ - skipped
+[1.132s] -- Detecting CXX compile features
+[1.132s] -- Detecting CXX compile features - done
+[1.133s] -- Found ament_cmake: 1.3.11 (/opt/ros/humble/share/ament_cmake/cmake)
+[1.133s] -- Found Python3: /usr/bin/python3 (found version "3.10.12") found components: Interpreter 
+[1.133s] -- Override CMake install command with custom implementation using symlinks instead of copying resources
+[1.133s] -- Found rclpy: 3.3.16 (/opt/ros/humble/share/rclpy/cmake)
+[1.133s] -- Found rosidl_default_generators: 1.2.0 (/opt/ros/humble/share/rosidl_default_generators/cmake)
+[1.133s] -- Using all available rosidl_typesupport_c: rosidl_typesupport_fastrtps_c;rosidl_typesupport_introspection_c
+[1.133s] -- Found rosidl_adapter: 3.1.6 (/opt/ros/humble/share/rosidl_adapter/cmake)
+[1.133s] -- Using all available rosidl_typesupport_cpp: rosidl_typesupport_fastrtps_cpp;rosidl_typesupport_introspection_cpp
+[1.133s] -- Found ament_cmake_ros: 0.10.0 (/opt/ros/humble/share/ament_cmake_ros/cmake)
+[1.133s] -- Using all available rosidl_typesupport_c: rosidl_typesupport_fastrtps_c;rosidl_typesupport_introspection_c
+[1.214s] -- Using all available rosidl_typesupport_cpp: rosidl_typesupport_fastrtps_cpp;rosidl_typesupport_introspection_cpp
+[1.232s] -- Found PythonInterp: /usr/bin/python3 (found suitable version "3.10.12", minimum required is "3.6") 
+[1.234s] -- Found python_cmake_module: 0.10.0 (/opt/ros/humble/share/python_cmake_module/cmake)
+[1.255s] -- Found PythonLibs: /usr/lib/x86_64-linux-gnu/libpython3.10.so (found suitable version "3.10.12", minimum required is "3.5") 
+[1.255s] -- Using PYTHON_EXECUTABLE: /usr/bin/python3
+[1.255s] -- Using PYTHON_INCLUDE_DIRS: /usr/include/python3.10
+[1.255s] -- Using PYTHON_LIBRARIES: /usr/lib/x86_64-linux-gnu/libpython3.10.so
+[1.272s] -- Found PythonExtra: .so  
+[1.304s] -- Found ament_lint_auto: 0.12.12 (/opt/ros/humble/share/ament_lint_auto/cmake)
+[1.319s] -- Added test 'lint_cmake' to check CMake code style
+[1.320s] -- Added test 'xmllint' to check XML markup files
+[1.322s] -- Configuring done
+[1.339s] -- Generating done
+[1.345s] -- Build files have been written to: /home/lmz/armpiper/build/piper_msgs
+[1.447s] Invoked command in '/home/lmz/armpiper/build/piper_msgs' returned '0': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/home/lmz/armpiper/install/vla:/home/lmz/armpiper/install/interface:/home/lmz/armpiper/install/piper:/home/lmz/armpiper/install/leapsim:/home/lmz/armpiper/install/follow:/home/lmz/armpiper/install/arm_control_pkg:/opt/ros/humble /usr/bin/cmake /home/lmz/armpiper/src/piper_ros/piper_msgs -DAMENT_CMAKE_SYMLINK_INSTALL=1 -DCMAKE_INSTALL_PREFIX=/home/lmz/armpiper/install/piper_msgs
+[1.448s] Invoking command in '/home/lmz/armpiper/build/piper_msgs': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/home/lmz/armpiper/install/vla:/home/lmz/armpiper/install/interface:/home/lmz/armpiper/install/piper:/home/lmz/armpiper/install/leapsim:/home/lmz/armpiper/install/follow:/home/lmz/armpiper/install/arm_control_pkg:/opt/ros/humble /usr/bin/cmake --build /home/lmz/armpiper/build/piper_msgs -- -j16 -l16
+[1.506s] [  2%] [34m[1mGenerating C code for ROS interfaces[0m
+[1.525s] [  4%] [34m[1mGenerating C++ code for ROS interfaces[0m
+[1.567s] [  4%] Built target ament_cmake_python_symlink_piper_msgs
+[2.194s] running egg_info
+[2.198s] creating piper_msgs.egg-info
+[2.199s] writing piper_msgs.egg-info/PKG-INFO
+[2.199s] writing dependency_links to piper_msgs.egg-info/dependency_links.txt
+[2.199s] writing top-level names to piper_msgs.egg-info/top_level.txt
+[2.201s] writing manifest file 'piper_msgs.egg-info/SOURCES.txt'
+[2.204s] reading manifest file 'piper_msgs.egg-info/SOURCES.txt'
+[2.205s] writing manifest file 'piper_msgs.egg-info/SOURCES.txt'
+[2.257s] [  6%] [32mBuilding C object CMakeFiles/piper_msgs__rosidl_generator_c.dir/rosidl_generator_c/piper_msgs/msg/detail/piper_status_msg__functions.c.o[0m
+[2.262s] [  8%] [32mBuilding C object CMakeFiles/piper_msgs__rosidl_generator_c.dir/rosidl_generator_c/piper_msgs/msg/detail/pos_cmd__functions.c.o[0m
+[2.269s] [ 10%] [32mBuilding C object CMakeFiles/piper_msgs__rosidl_generator_c.dir/rosidl_generator_c/piper_msgs/srv/detail/enable__functions.c.o[0m
+[2.286s] [ 10%] Built target ament_cmake_python_build_piper_msgs_egg
+[2.393s] [ 12%] [32m[1mLinking C shared library libpiper_msgs__rosidl_generator_c.so[0m
+[2.479s] [ 12%] Built target piper_msgs__rosidl_generator_c
+[2.493s] [ 12%] Built target piper_msgs__cpp
+[2.504s] [ 14%] [34m[1mGenerating C introspection for ROS interfaces[0m
+[2.504s] [ 17%] [34m[1mGenerating C type support dispatch for ROS interfaces[0m
+[2.505s] [ 19%] [34m[1mGenerating C type support for eProsima Fast-RTPS[0m
+[2.514s] [ 21%] [34m[1mGenerating C++ introspection for ROS interfaces[0m
+[2.518s] [ 23%] [34m[1mGenerating C++ type support dispatch for ROS interfaces[0m
+[2.520s] [ 25%] [34m[1mGenerating C++ type support for eProsima Fast-RTPS[0m
+[2.999s] [ 27%] [32mBuilding CXX object CMakeFiles/piper_msgs__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/piper_msgs/msg/piper_status_msg__type_support.cpp.o[0m
+[3.009s] [ 29%] [32mBuilding CXX object CMakeFiles/piper_msgs__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/piper_msgs/srv/enable__type_support.cpp.o[0m
+[3.012s] [ 31%] [32mBuilding CXX object CMakeFiles/piper_msgs__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/piper_msgs/msg/pos_cmd__type_support.cpp.o[0m
+[3.064s] [ 34%] [32mBuilding C object CMakeFiles/piper_msgs__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/piper_msgs/msg/detail/piper_status_msg__type_support.c.o[0m
+[3.071s] [ 36%] [32mBuilding C object CMakeFiles/piper_msgs__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/piper_msgs/msg/detail/pos_cmd__type_support.c.o[0m
+[3.071s] [ 38%] [32mBuilding C object CMakeFiles/piper_msgs__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/piper_msgs/srv/detail/enable__type_support.c.o[0m
+[3.163s] [ 40%] [32m[1mLinking C shared library libpiper_msgs__rosidl_typesupport_introspection_c.so[0m
+[3.223s] [ 40%] Built target piper_msgs__rosidl_typesupport_introspection_c
+[3.283s] [ 42%] [32mBuilding CXX object CMakeFiles/piper_msgs__rosidl_typesupport_c.dir/rosidl_typesupport_c/piper_msgs/msg/piper_status_msg__type_support.cpp.o[0m
+[3.284s] [ 44%] [32mBuilding CXX object CMakeFiles/piper_msgs__rosidl_typesupport_c.dir/rosidl_typesupport_c/piper_msgs/msg/pos_cmd__type_support.cpp.o[0m
+[3.289s] [ 46%] [32mBuilding CXX object CMakeFiles/piper_msgs__rosidl_typesupport_c.dir/rosidl_typesupport_c/piper_msgs/srv/enable__type_support.cpp.o[0m
+[3.371s] [ 48%] [32m[1mLinking CXX shared library libpiper_msgs__rosidl_typesupport_c.so[0m
+[3.426s] [ 48%] Built target piper_msgs__rosidl_typesupport_c
+[3.435s] [ 51%] [32mBuilding CXX object CMakeFiles/piper_msgs__rosidl_typesupport_introspection_cpp.dir/rosidl_typesupport_introspection_cpp/piper_msgs/msg/detail/piper_status_msg__type_support.cpp.o[0m
+[3.438s] [ 53%] [32mBuilding CXX object CMakeFiles/piper_msgs__rosidl_typesupport_introspection_cpp.dir/rosidl_typesupport_introspection_cpp/piper_msgs/msg/detail/pos_cmd__type_support.cpp.o[0m
+[3.443s] [ 55%] [32mBuilding CXX object CMakeFiles/piper_msgs__rosidl_typesupport_introspection_cpp.dir/rosidl_typesupport_introspection_cpp/piper_msgs/srv/detail/enable__type_support.cpp.o[0m
+[3.444s] [ 57%] [32mBuilding CXX object CMakeFiles/piper_msgs__rosidl_typesupport_fastrtps_cpp.dir/rosidl_typesupport_fastrtps_cpp/piper_msgs/msg/detail/dds_fastrtps/pos_cmd__type_support.cpp.o[0m
+[3.446s] [ 59%] [32mBuilding CXX object CMakeFiles/piper_msgs__rosidl_typesupport_fastrtps_cpp.dir/rosidl_typesupport_fastrtps_cpp/piper_msgs/msg/detail/dds_fastrtps/piper_status_msg__type_support.cpp.o[0m
+[3.450s] [ 61%] [32mBuilding CXX object CMakeFiles/piper_msgs__rosidl_typesupport_fastrtps_cpp.dir/rosidl_typesupport_fastrtps_cpp/piper_msgs/srv/detail/dds_fastrtps/enable__type_support.cpp.o[0m
+[3.556s] [ 63%] [32mBuilding CXX object CMakeFiles/piper_msgs__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/piper_msgs/msg/detail/piper_status_msg__type_support_c.cpp.o[0m
+[3.556s] [ 65%] [32mBuilding CXX object CMakeFiles/piper_msgs__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/piper_msgs/msg/detail/pos_cmd__type_support_c.cpp.o[0m
+[3.571s] [ 68%] [32mBuilding CXX object CMakeFiles/piper_msgs__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/piper_msgs/srv/detail/enable__type_support_c.cpp.o[0m
+[3.624s] [ 70%] [32m[1mLinking CXX shared library libpiper_msgs__rosidl_typesupport_cpp.so[0m
+[3.726s] [ 70%] Built target piper_msgs__rosidl_typesupport_cpp
+[4.051s] [ 72%] [32m[1mLinking CXX shared library libpiper_msgs__rosidl_typesupport_introspection_cpp.so[0m
+[4.078s] [ 74%] [32m[1mLinking CXX shared library libpiper_msgs__rosidl_typesupport_fastrtps_c.so[0m
+[4.093s] [ 74%] Built target piper_msgs__rosidl_typesupport_introspection_cpp
+[4.122s] [ 76%] [32m[1mLinking CXX shared library libpiper_msgs__rosidl_typesupport_fastrtps_cpp.so[0m
+[4.152s] [ 76%] Built target piper_msgs__rosidl_typesupport_fastrtps_c
+[4.194s] [ 76%] Built target piper_msgs__rosidl_typesupport_fastrtps_cpp
+[4.214s] [ 76%] Built target piper_msgs
+[4.232s] [ 78%] [34m[1mGenerating Python code for ROS interfaces[0m
+[5.042s] [ 78%] Built target piper_msgs__py
+[5.060s] [ 80%] [32mBuilding C object CMakeFiles/piper_msgs__rosidl_generator_py.dir/rosidl_generator_py/piper_msgs/srv/_enable_s.c.o[0m
+[5.062s] [ 85%] [32mBuilding C object CMakeFiles/piper_msgs__rosidl_generator_py.dir/rosidl_generator_py/piper_msgs/msg/_piper_status_msg_s.c.o[0m
+[5.063s] [ 85%] [32mBuilding C object CMakeFiles/piper_msgs__rosidl_generator_py.dir/rosidl_generator_py/piper_msgs/msg/_pos_cmd_s.c.o[0m
+[5.174s] [ 87%] [32m[1mLinking C shared library rosidl_generator_py/piper_msgs/libpiper_msgs__rosidl_generator_py.so[0m
+[5.203s] [ 87%] Built target piper_msgs__rosidl_generator_py
+[5.218s] [ 89%] [32mBuilding C object CMakeFiles/piper_msgs__rosidl_typesupport_introspection_c__pyext.dir/rosidl_generator_py/piper_msgs/_piper_msgs_s.ep.rosidl_typesupport_introspection_c.c.o[0m
+[5.226s] [ 93%] [32mBuilding C object CMakeFiles/piper_msgs__rosidl_typesupport_c__pyext.dir/rosidl_generator_py/piper_msgs/_piper_msgs_s.ep.rosidl_typesupport_c.c.o[0m
+[5.226s] [ 93%] [32mBuilding C object CMakeFiles/piper_msgs__rosidl_typesupport_fastrtps_c__pyext.dir/rosidl_generator_py/piper_msgs/_piper_msgs_s.ep.rosidl_typesupport_fastrtps_c.c.o[0m
+[5.286s] [ 95%] [32m[1mLinking C shared library rosidl_generator_py/piper_msgs/piper_msgs_s__rosidl_typesupport_introspection_c.cpython-310-x86_64-linux-gnu.so[0m
+[5.296s] [ 97%] [32m[1mLinking C shared library rosidl_generator_py/piper_msgs/piper_msgs_s__rosidl_typesupport_c.cpython-310-x86_64-linux-gnu.so[0m
+[5.312s] [ 97%] Built target piper_msgs__rosidl_typesupport_introspection_c__pyext
+[5.329s] [ 97%] Built target piper_msgs__rosidl_typesupport_c__pyext
+[5.334s] [100%] [32m[1mLinking C shared library rosidl_generator_py/piper_msgs/piper_msgs_s__rosidl_typesupport_fastrtps_c.cpython-310-x86_64-linux-gnu.so[0m
+[5.361s] [100%] Built target piper_msgs__rosidl_typesupport_fastrtps_c__pyext
+[5.371s] Invoked command in '/home/lmz/armpiper/build/piper_msgs' returned '0': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/home/lmz/armpiper/install/vla:/home/lmz/armpiper/install/interface:/home/lmz/armpiper/install/piper:/home/lmz/armpiper/install/leapsim:/home/lmz/armpiper/install/follow:/home/lmz/armpiper/install/arm_control_pkg:/opt/ros/humble /usr/bin/cmake --build /home/lmz/armpiper/build/piper_msgs -- -j16 -l16
+[5.372s] Invoking command in '/home/lmz/armpiper/build/piper_msgs': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/home/lmz/armpiper/install/vla:/home/lmz/armpiper/install/interface:/home/lmz/armpiper/install/piper:/home/lmz/armpiper/install/leapsim:/home/lmz/armpiper/install/follow:/home/lmz/armpiper/install/arm_control_pkg:/opt/ros/humble /usr/bin/cmake --install /home/lmz/armpiper/build/piper_msgs
+[5.378s] -- Install configuration: ""
+[5.378s] -- Execute custom install script
+[5.378s] -- Symlinking: /home/lmz/armpiper/install/piper_msgs/share/ament_index/resource_index/rosidl_interfaces/piper_msgs
+[5.383s] -- Symlinking: /home/lmz/armpiper/install/piper_msgs/include/piper_msgs/piper_msgs/msg/detail/piper_status_msg__functions.h
+[5.389s] -- Symlinking: /home/lmz/armpiper/install/piper_msgs/include/piper_msgs/piper_msgs/msg/detail/piper_status_msg__struct.h
+[5.395s] -- Symlinking: /home/lmz/armpiper/install/piper_msgs/include/piper_msgs/piper_msgs/msg/detail/piper_status_msg__type_support.h
+[5.400s] -- Symlinking: /home/lmz/armpiper/install/piper_msgs/include/piper_msgs/piper_msgs/msg/detail/pos_cmd__functions.h
+[5.409s] -- Symlinking: /home/lmz/armpiper/install/piper_msgs/include/piper_msgs/piper_msgs/msg/detail/pos_cmd__struct.h
+[5.417s] -- Symlinking: /home/lmz/armpiper/install/piper_msgs/include/piper_msgs/piper_msgs/msg/detail/pos_cmd__type_support.h
+[5.424s] -- Symlinking: /home/lmz/armpiper/install/piper_msgs/include/piper_msgs/piper_msgs/msg/piper_status_msg.h
+[5.432s] -- Symlinking: /home/lmz/armpiper/install/piper_msgs/include/piper_msgs/piper_msgs/msg/pos_cmd.h
+[5.440s] -- Symlinking: /home/lmz/armpiper/install/piper_msgs/include/piper_msgs/piper_msgs/msg/rosidl_generator_c__visibility_control.h
+[5.447s] -- Symlinking: /home/lmz/armpiper/install/piper_msgs/include/piper_msgs/piper_msgs/srv/detail/enable__functions.h
+[5.454s] -- Symlinking: /home/lmz/armpiper/install/piper_msgs/include/piper_msgs/piper_msgs/srv/detail/enable__struct.h
+[5.460s] -- Symlinking: /home/lmz/armpiper/install/piper_msgs/include/piper_msgs/piper_msgs/srv/detail/enable__type_support.h
+[5.466s] -- Symlinking: /home/lmz/armpiper/install/piper_msgs/include/piper_msgs/piper_msgs/srv/enable.h
+[5.472s] -- Symlinking: /home/lmz/armpiper/install/piper_msgs/share/piper_msgs/environment/library_path.sh
+[5.479s] -- Symlinking: /home/lmz/armpiper/install/piper_msgs/share/piper_msgs/environment/library_path.dsv
+[5.487s] -- Symlinking: /home/lmz/armpiper/install/piper_msgs/include/piper_msgs/piper_msgs/msg/detail/piper_status_msg__rosidl_typesupport_fastrtps_c.h
+[5.495s] -- Symlinking: /home/lmz/armpiper/install/piper_msgs/include/piper_msgs/piper_msgs/msg/detail/pos_cmd__rosidl_typesupport_fastrtps_c.h
+[5.503s] -- Symlinking: /home/lmz/armpiper/install/piper_msgs/include/piper_msgs/piper_msgs/msg/rosidl_typesupport_fastrtps_c__visibility_control.h
+[5.510s] -- Symlinking: /home/lmz/armpiper/install/piper_msgs/include/piper_msgs/piper_msgs/srv/detail/enable__rosidl_typesupport_fastrtps_c.h
+[5.517s] -- Symlinking: /home/lmz/armpiper/install/piper_msgs/include/piper_msgs/piper_msgs/msg/detail/piper_status_msg__rosidl_typesupport_introspection_c.h
+[5.525s] -- Symlinking: /home/lmz/armpiper/install/piper_msgs/include/piper_msgs/piper_msgs/msg/detail/pos_cmd__rosidl_typesupport_introspection_c.h
+[5.533s] -- Symlinking: /home/lmz/armpiper/install/piper_msgs/include/piper_msgs/piper_msgs/msg/rosidl_typesupport_introspection_c__visibility_control.h
+[5.539s] -- Symlinking: /home/lmz/armpiper/install/piper_msgs/include/piper_msgs/piper_msgs/srv/detail/enable__rosidl_typesupport_introspection_c.h
+[5.546s] -- Symlinking: /home/lmz/armpiper/install/piper_msgs/include/piper_msgs/piper_msgs/msg/detail/piper_status_msg__builder.hpp
+[5.553s] -- Symlinking: /home/lmz/armpiper/install/piper_msgs/include/piper_msgs/piper_msgs/msg/detail/piper_status_msg__struct.hpp
+[5.560s] -- Symlinking: /home/lmz/armpiper/install/piper_msgs/include/piper_msgs/piper_msgs/msg/detail/piper_status_msg__traits.hpp
+[5.565s] -- Symlinking: /home/lmz/armpiper/install/piper_msgs/include/piper_msgs/piper_msgs/msg/detail/piper_status_msg__type_support.hpp
+[5.575s] -- Symlinking: /home/lmz/armpiper/install/piper_msgs/include/piper_msgs/piper_msgs/msg/detail/pos_cmd__builder.hpp
+[5.583s] -- Symlinking: /home/lmz/armpiper/install/piper_msgs/include/piper_msgs/piper_msgs/msg/detail/pos_cmd__struct.hpp
+[5.592s] -- Symlinking: /home/lmz/armpiper/install/piper_msgs/include/piper_msgs/piper_msgs/msg/detail/pos_cmd__traits.hpp
+[5.601s] -- Symlinking: /home/lmz/armpiper/install/piper_msgs/include/piper_msgs/piper_msgs/msg/detail/pos_cmd__type_support.hpp
+[5.609s] -- Symlinking: /home/lmz/armpiper/install/piper_msgs/include/piper_msgs/piper_msgs/msg/piper_status_msg.hpp
+[5.616s] -- Symlinking: /home/lmz/armpiper/install/piper_msgs/include/piper_msgs/piper_msgs/msg/pos_cmd.hpp
+[5.621s] -- Symlinking: /home/lmz/armpiper/install/piper_msgs/include/piper_msgs/piper_msgs/msg/rosidl_generator_cpp__visibility_control.hpp
+[5.627s] -- Symlinking: /home/lmz/armpiper/install/piper_msgs/include/piper_msgs/piper_msgs/srv/detail/enable__builder.hpp
+[5.633s] -- Symlinking: /home/lmz/armpiper/install/piper_msgs/include/piper_msgs/piper_msgs/srv/detail/enable__struct.hpp
+[5.641s] -- Symlinking: /home/lmz/armpiper/install/piper_msgs/include/piper_msgs/piper_msgs/srv/detail/enable__traits.hpp
+[5.648s] -- Symlinking: /home/lmz/armpiper/install/piper_msgs/include/piper_msgs/piper_msgs/srv/detail/enable__type_support.hpp
+[5.657s] -- Symlinking: /home/lmz/armpiper/install/piper_msgs/include/piper_msgs/piper_msgs/srv/enable.hpp
+[5.667s] -- Symlinking: /home/lmz/armpiper/install/piper_msgs/include/piper_msgs/piper_msgs/msg/detail/piper_status_msg__rosidl_typesupport_fastrtps_cpp.hpp
+[5.677s] -- Symlinking: /home/lmz/armpiper/install/piper_msgs/include/piper_msgs/piper_msgs/msg/detail/pos_cmd__rosidl_typesupport_fastrtps_cpp.hpp
+[5.683s] -- Symlinking: /home/lmz/armpiper/install/piper_msgs/include/piper_msgs/piper_msgs/msg/rosidl_typesupport_fastrtps_cpp__visibility_control.h
+[5.691s] -- Symlinking: /home/lmz/armpiper/install/piper_msgs/include/piper_msgs/piper_msgs/srv/detail/enable__rosidl_typesupport_fastrtps_cpp.hpp
+[5.700s] -- Symlinking: /home/lmz/armpiper/install/piper_msgs/include/piper_msgs/piper_msgs/msg/detail/piper_status_msg__rosidl_typesupport_introspection_cpp.hpp
+[5.707s] -- Symlinking: /home/lmz/armpiper/install/piper_msgs/include/piper_msgs/piper_msgs/msg/detail/pos_cmd__rosidl_typesupport_introspection_cpp.hpp
+[5.714s] -- Symlinking: /home/lmz/armpiper/install/piper_msgs/include/piper_msgs/piper_msgs/srv/detail/enable__rosidl_typesupport_introspection_cpp.hpp
+[5.721s] -- Symlinking: /home/lmz/armpiper/install/piper_msgs/share/piper_msgs/environment/pythonpath.sh
+[5.730s] -- Symlinking: /home/lmz/armpiper/install/piper_msgs/share/piper_msgs/environment/pythonpath.dsv
+[5.735s] -- Symlinking: /home/lmz/armpiper/install/piper_msgs/local/lib/python3.10/dist-packages/piper_msgs-0.0.0-py3.10.egg-info/PKG-INFO
+[5.740s] -- Symlinking: /home/lmz/armpiper/install/piper_msgs/local/lib/python3.10/dist-packages/piper_msgs-0.0.0-py3.10.egg-info/SOURCES.txt
+[5.748s] -- Symlinking: /home/lmz/armpiper/install/piper_msgs/local/lib/python3.10/dist-packages/piper_msgs-0.0.0-py3.10.egg-info/dependency_links.txt
+[5.754s] -- Symlinking: /home/lmz/armpiper/install/piper_msgs/local/lib/python3.10/dist-packages/piper_msgs-0.0.0-py3.10.egg-info/top_level.txt
+[5.762s] -- Symlinking: /home/lmz/armpiper/install/piper_msgs/local/lib/python3.10/dist-packages/piper_msgs/__init__.py
+[5.770s] -- Symlinking: /home/lmz/armpiper/install/piper_msgs/local/lib/python3.10/dist-packages/piper_msgs/_piper_msgs_s.ep.rosidl_typesupport_c.c
+[5.778s] -- Symlinking: /home/lmz/armpiper/install/piper_msgs/local/lib/python3.10/dist-packages/piper_msgs/_piper_msgs_s.ep.rosidl_typesupport_fastrtps_c.c
+[5.787s] -- Symlinking: /home/lmz/armpiper/install/piper_msgs/local/lib/python3.10/dist-packages/piper_msgs/_piper_msgs_s.ep.rosidl_typesupport_introspection_c.c
+[5.796s] -- Symlinking: /home/lmz/armpiper/install/piper_msgs/local/lib/python3.10/dist-packages/piper_msgs/libpiper_msgs__rosidl_generator_py.so
+[5.803s] -- Symlinking: /home/lmz/armpiper/install/piper_msgs/local/lib/python3.10/dist-packages/piper_msgs/msg/__init__.py
+[5.809s] -- Symlinking: /home/lmz/armpiper/install/piper_msgs/local/lib/python3.10/dist-packages/piper_msgs/msg/_piper_status_msg.py
+[5.815s] -- Symlinking: /home/lmz/armpiper/install/piper_msgs/local/lib/python3.10/dist-packages/piper_msgs/msg/_piper_status_msg_s.c
+[5.826s] -- Symlinking: /home/lmz/armpiper/install/piper_msgs/local/lib/python3.10/dist-packages/piper_msgs/msg/_pos_cmd.py
+[5.837s] -- Symlinking: /home/lmz/armpiper/install/piper_msgs/local/lib/python3.10/dist-packages/piper_msgs/msg/_pos_cmd_s.c
+[5.848s] -- Symlinking: /home/lmz/armpiper/install/piper_msgs/local/lib/python3.10/dist-packages/piper_msgs/piper_msgs_s__rosidl_typesupport_c.cpython-310-x86_64-linux-gnu.so
+[5.858s] -- Symlinking: /home/lmz/armpiper/install/piper_msgs/local/lib/python3.10/dist-packages/piper_msgs/piper_msgs_s__rosidl_typesupport_fastrtps_c.cpython-310-x86_64-linux-gnu.so
+[5.867s] -- Symlinking: /home/lmz/armpiper/install/piper_msgs/local/lib/python3.10/dist-packages/piper_msgs/piper_msgs_s__rosidl_typesupport_introspection_c.cpython-310-x86_64-linux-gnu.so
+[5.875s] -- Symlinking: /home/lmz/armpiper/install/piper_msgs/local/lib/python3.10/dist-packages/piper_msgs/srv/__init__.py
+[5.881s] -- Symlinking: /home/lmz/armpiper/install/piper_msgs/local/lib/python3.10/dist-packages/piper_msgs/srv/_enable.py
+[5.887s] -- Symlinking: /home/lmz/armpiper/install/piper_msgs/local/lib/python3.10/dist-packages/piper_msgs/srv/_enable_s.c
+[5.893s] -- Up-to-date symlink: /home/lmz/armpiper/install/piper_msgs/local/lib/python3.10/dist-packages/piper_msgs/piper_msgs_s__rosidl_typesupport_fastrtps_c.cpython-310-x86_64-linux-gnu.so
+[5.893s] -- Up-to-date symlink: /home/lmz/armpiper/install/piper_msgs/local/lib/python3.10/dist-packages/piper_msgs/piper_msgs_s__rosidl_typesupport_introspection_c.cpython-310-x86_64-linux-gnu.so
+[5.893s] -- Up-to-date symlink: /home/lmz/armpiper/install/piper_msgs/local/lib/python3.10/dist-packages/piper_msgs/piper_msgs_s__rosidl_typesupport_c.cpython-310-x86_64-linux-gnu.so
+[5.893s] -- Symlinking: /home/lmz/armpiper/install/piper_msgs/share/piper_msgs/msg/PiperStatusMsg.idl
+[5.900s] -- Symlinking: /home/lmz/armpiper/install/piper_msgs/share/piper_msgs/msg/PosCmd.idl
+[5.906s] -- Symlinking: /home/lmz/armpiper/install/piper_msgs/share/piper_msgs/srv/Enable.idl
+[5.912s] -- Symlinking: /home/lmz/armpiper/install/piper_msgs/share/piper_msgs/msg/PiperStatusMsg.msg
+[5.921s] -- Symlinking: /home/lmz/armpiper/install/piper_msgs/share/piper_msgs/msg/PosCmd.msg
+[5.926s] -- Symlinking: /home/lmz/armpiper/install/piper_msgs/share/piper_msgs/srv/Enable.srv
+[5.932s] -- Symlinking: /home/lmz/armpiper/install/piper_msgs/share/piper_msgs/srv/Enable_Request.msg
+[5.940s] -- Symlinking: /home/lmz/armpiper/install/piper_msgs/share/piper_msgs/srv/Enable_Response.msg
+[5.949s] -- Symlinking: /home/lmz/armpiper/install/piper_msgs/share/ament_index/resource_index/package_run_dependencies/piper_msgs
+[5.958s] -- Symlinking: /home/lmz/armpiper/install/piper_msgs/share/ament_index/resource_index/parent_prefix_path/piper_msgs
+[5.966s] -- Symlinking: /home/lmz/armpiper/install/piper_msgs/share/piper_msgs/environment/ament_prefix_path.sh
+[5.975s] -- Symlinking: /home/lmz/armpiper/install/piper_msgs/share/piper_msgs/environment/ament_prefix_path.dsv
+[5.984s] -- Symlinking: /home/lmz/armpiper/install/piper_msgs/share/piper_msgs/environment/path.sh
+[5.990s] -- Symlinking: /home/lmz/armpiper/install/piper_msgs/share/piper_msgs/environment/path.dsv
+[5.999s] -- Symlinking: /home/lmz/armpiper/install/piper_msgs/share/piper_msgs/local_setup.bash
+[6.007s] -- Symlinking: /home/lmz/armpiper/install/piper_msgs/share/piper_msgs/local_setup.sh
+[6.016s] -- Symlinking: /home/lmz/armpiper/install/piper_msgs/share/piper_msgs/local_setup.zsh
+[6.024s] -- Symlinking: /home/lmz/armpiper/install/piper_msgs/share/piper_msgs/local_setup.dsv
+[6.033s] -- Symlinking: /home/lmz/armpiper/install/piper_msgs/share/piper_msgs/package.dsv
+[6.041s] -- Symlinking: /home/lmz/armpiper/install/piper_msgs/share/ament_index/resource_index/packages/piper_msgs
+[6.051s] -- Symlinking: /home/lmz/armpiper/install/piper_msgs/share/piper_msgs/cmake/rosidl_cmake-extras.cmake
+[6.060s] -- Symlinking: /home/lmz/armpiper/install/piper_msgs/share/piper_msgs/cmake/ament_cmake_export_include_directories-extras.cmake
+[6.069s] -- Symlinking: /home/lmz/armpiper/install/piper_msgs/share/piper_msgs/cmake/ament_cmake_export_libraries-extras.cmake
+[6.076s] -- Symlinking: /home/lmz/armpiper/install/piper_msgs/share/piper_msgs/cmake/ament_cmake_export_targets-extras.cmake
+[6.085s] -- Symlinking: /home/lmz/armpiper/install/piper_msgs/share/piper_msgs/cmake/rosidl_cmake_export_typesupport_targets-extras.cmake
+[6.092s] -- Symlinking: /home/lmz/armpiper/install/piper_msgs/share/piper_msgs/cmake/ament_cmake_export_dependencies-extras.cmake
+[6.096s] -- Symlinking: /home/lmz/armpiper/install/piper_msgs/share/piper_msgs/cmake/rosidl_cmake_export_typesupport_libraries-extras.cmake
+[6.102s] -- Symlinking: /home/lmz/armpiper/install/piper_msgs/share/piper_msgs/cmake/piper_msgsConfig.cmake
+[6.108s] -- Symlinking: /home/lmz/armpiper/install/piper_msgs/share/piper_msgs/cmake/piper_msgsConfig-version.cmake
+[6.117s] -- Symlinking: /home/lmz/armpiper/install/piper_msgs/share/piper_msgs/package.xml
+[6.126s] -- Installing: /home/lmz/armpiper/install/piper_msgs/lib/libpiper_msgs__rosidl_generator_c.so
+[6.126s] -- Set runtime path of "/home/lmz/armpiper/install/piper_msgs/lib/libpiper_msgs__rosidl_generator_c.so" to ""
+[6.126s] -- Installing: /home/lmz/armpiper/install/piper_msgs/lib/libpiper_msgs__rosidl_typesupport_fastrtps_c.so
+[6.126s] -- Set runtime path of "/home/lmz/armpiper/install/piper_msgs/lib/libpiper_msgs__rosidl_typesupport_fastrtps_c.so" to ""
+[6.127s] -- Installing: /home/lmz/armpiper/install/piper_msgs/lib/libpiper_msgs__rosidl_typesupport_introspection_c.so
+[6.127s] -- Set runtime path of "/home/lmz/armpiper/install/piper_msgs/lib/libpiper_msgs__rosidl_typesupport_introspection_c.so" to ""
+[6.127s] -- Installing: /home/lmz/armpiper/install/piper_msgs/lib/libpiper_msgs__rosidl_typesupport_c.so
+[6.127s] -- Set runtime path of "/home/lmz/armpiper/install/piper_msgs/lib/libpiper_msgs__rosidl_typesupport_c.so" to ""
+[6.127s] -- Installing: /home/lmz/armpiper/install/piper_msgs/lib/libpiper_msgs__rosidl_typesupport_fastrtps_cpp.so
+[6.128s] -- Set runtime path of "/home/lmz/armpiper/install/piper_msgs/lib/libpiper_msgs__rosidl_typesupport_fastrtps_cpp.so" to ""
+[6.128s] -- Installing: /home/lmz/armpiper/install/piper_msgs/lib/libpiper_msgs__rosidl_typesupport_introspection_cpp.so
+[6.128s] -- Set runtime path of "/home/lmz/armpiper/install/piper_msgs/lib/libpiper_msgs__rosidl_typesupport_introspection_cpp.so" to ""
+[6.128s] -- Installing: /home/lmz/armpiper/install/piper_msgs/lib/libpiper_msgs__rosidl_typesupport_cpp.so
+[6.128s] -- Set runtime path of "/home/lmz/armpiper/install/piper_msgs/lib/libpiper_msgs__rosidl_typesupport_cpp.so" to ""
+[6.160s] Listing '/home/lmz/armpiper/install/piper_msgs/local/lib/python3.10/dist-packages/piper_msgs'...
+[6.160s] Compiling '/home/lmz/armpiper/install/piper_msgs/local/lib/python3.10/dist-packages/piper_msgs/__init__.py'...
+[6.160s] Listing '/home/lmz/armpiper/install/piper_msgs/local/lib/python3.10/dist-packages/piper_msgs/msg'...
+[6.160s] Compiling '/home/lmz/armpiper/install/piper_msgs/local/lib/python3.10/dist-packages/piper_msgs/msg/__init__.py'...
+[6.160s] Compiling '/home/lmz/armpiper/install/piper_msgs/local/lib/python3.10/dist-packages/piper_msgs/msg/_piper_status_msg.py'...
+[6.160s] Compiling '/home/lmz/armpiper/install/piper_msgs/local/lib/python3.10/dist-packages/piper_msgs/msg/_pos_cmd.py'...
+[6.160s] Listing '/home/lmz/armpiper/install/piper_msgs/local/lib/python3.10/dist-packages/piper_msgs/srv'...
+[6.160s] Compiling '/home/lmz/armpiper/install/piper_msgs/local/lib/python3.10/dist-packages/piper_msgs/srv/__init__.py'...
+[6.160s] Compiling '/home/lmz/armpiper/install/piper_msgs/local/lib/python3.10/dist-packages/piper_msgs/srv/_enable.py'...
+[6.163s] -- Installing: /home/lmz/armpiper/install/piper_msgs/lib/libpiper_msgs__rosidl_generator_py.so
+[6.164s] -- Set runtime path of "/home/lmz/armpiper/install/piper_msgs/lib/libpiper_msgs__rosidl_generator_py.so" to ""
+[6.164s] -- Installing: /home/lmz/armpiper/install/piper_msgs/share/piper_msgs/cmake/export_piper_msgs__rosidl_generator_cExport.cmake
+[6.164s] -- Installing: /home/lmz/armpiper/install/piper_msgs/share/piper_msgs/cmake/export_piper_msgs__rosidl_generator_cExport-noconfig.cmake
+[6.164s] -- Installing: /home/lmz/armpiper/install/piper_msgs/share/piper_msgs/cmake/export_piper_msgs__rosidl_typesupport_fastrtps_cExport.cmake
+[6.164s] -- Installing: /home/lmz/armpiper/install/piper_msgs/share/piper_msgs/cmake/export_piper_msgs__rosidl_typesupport_fastrtps_cExport-noconfig.cmake
+[6.164s] -- Installing: /home/lmz/armpiper/install/piper_msgs/share/piper_msgs/cmake/piper_msgs__rosidl_typesupport_introspection_cExport.cmake
+[6.165s] -- Installing: /home/lmz/armpiper/install/piper_msgs/share/piper_msgs/cmake/piper_msgs__rosidl_typesupport_introspection_cExport-noconfig.cmake
+[6.165s] -- Installing: /home/lmz/armpiper/install/piper_msgs/share/piper_msgs/cmake/piper_msgs__rosidl_typesupport_cExport.cmake
+[6.165s] -- Installing: /home/lmz/armpiper/install/piper_msgs/share/piper_msgs/cmake/piper_msgs__rosidl_typesupport_cExport-noconfig.cmake
+[6.165s] -- Installing: /home/lmz/armpiper/install/piper_msgs/share/piper_msgs/cmake/export_piper_msgs__rosidl_generator_cppExport.cmake
+[6.165s] -- Installing: /home/lmz/armpiper/install/piper_msgs/share/piper_msgs/cmake/export_piper_msgs__rosidl_typesupport_fastrtps_cppExport.cmake
+[6.165s] -- Installing: /home/lmz/armpiper/install/piper_msgs/share/piper_msgs/cmake/export_piper_msgs__rosidl_typesupport_fastrtps_cppExport-noconfig.cmake
+[6.166s] -- Installing: /home/lmz/armpiper/install/piper_msgs/share/piper_msgs/cmake/piper_msgs__rosidl_typesupport_introspection_cppExport.cmake
+[6.166s] -- Installing: /home/lmz/armpiper/install/piper_msgs/share/piper_msgs/cmake/piper_msgs__rosidl_typesupport_introspection_cppExport-noconfig.cmake
+[6.166s] -- Installing: /home/lmz/armpiper/install/piper_msgs/share/piper_msgs/cmake/piper_msgs__rosidl_typesupport_cppExport.cmake
+[6.166s] -- Installing: /home/lmz/armpiper/install/piper_msgs/share/piper_msgs/cmake/piper_msgs__rosidl_typesupport_cppExport-noconfig.cmake
+[6.166s] -- Installing: /home/lmz/armpiper/install/piper_msgs/share/piper_msgs/cmake/export_piper_msgs__rosidl_generator_pyExport.cmake
+[6.166s] -- Installing: /home/lmz/armpiper/install/piper_msgs/share/piper_msgs/cmake/export_piper_msgs__rosidl_generator_pyExport-noconfig.cmake
+[6.168s] Invoked command in '/home/lmz/armpiper/build/piper_msgs' returned '0': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/home/lmz/armpiper/install/vla:/home/lmz/armpiper/install/interface:/home/lmz/armpiper/install/piper:/home/lmz/armpiper/install/leapsim:/home/lmz/armpiper/install/follow:/home/lmz/armpiper/install/arm_control_pkg:/opt/ros/humble /usr/bin/cmake --install /home/lmz/armpiper/build/piper_msgs

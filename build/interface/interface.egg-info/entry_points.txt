@@ -9,5 +9,7 @@ chessboard_hand_eye_calibration_node = interface.chessboard_hand_eye_calibration
 eye_in_hand_calibration_node = interface.eye_in_hand_calibration_node:main
 master_node = interface.master_node:main
 piper_keyboard_joint_jog = interface.piper_keyboard_joint_jog:main
+position_player = interface.position_player:main
+position_record = interface.position_record:main
 ultimate_yolo_node_cpu = interface.ultimate_yolo_node_cpu:main
 

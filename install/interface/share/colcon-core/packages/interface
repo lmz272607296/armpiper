@@ -1,1 +1,1 @@
-ament_index_python:builtin_interfaces:cv_bridge:geometry_msgs:image_geometry:message_filters:piper_msgs:python3-numpy:rclpy:sensor_msgs:std_msgs:trajectory_msgs
+ament_index_python:builtin_interfaces:cv_bridge:dynamixel_interfaces:geometry_msgs:image_geometry:message_filters:piper_msgs:python3-numpy:rcl_interfaces:rclpy:sensor_msgs:std_msgs:std_srvs:trajectory_msgs

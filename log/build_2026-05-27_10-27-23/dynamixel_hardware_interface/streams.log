@@ -1,0 +1,148 @@
+[0.012s] Invoking command in '/home/lmz/armpiper/build/dynamixel_hardware_interface': CMAKE_PREFIX_PATH=/home/lmz/armpiper/install/dynamixel_sdk:/home/lmz/armpiper/install/dynamixel_interfaces:/home/lmz/armpiper/install/piper_with_gripper_moveit:/home/lmz/armpiper/install/piper_no_gripper_moveit:/home/lmz/armpiper/install/piper_mujoco:/home/lmz/armpiper/install/piper_msgs:/home/lmz/armpiper/install/piper_humble:/home/lmz/armpiper/install/piper_gazebo:/home/lmz/armpiper/install/piper_description:/home/lmz/armpiper/install/open_manipulator:/home/lmz/armpiper/install/open_manipulator_x_bringup:/home/lmz/armpiper/install/open_manipulator_x_description:/home/lmz/armpiper/install/dynamixel_sdk_examples:/home/lmz/armpiper/install/dynamixel_sdk_custom_interfaces:/home/lmz/armpiper/install/dynamixel_hardware_interface:/home/lmz/armpiper/install/vla:/home/lmz/armpiper/install/interface:/home/lmz/armpiper/install/piper:/home/lmz/armpiper/install/leapsim:/home/lmz/armpiper/install/follow:/home/lmz/armpiper/install/arm_control_pkg:/opt/ros/humble LD_LIBRARY_PATH=/home/lmz/armpiper/install/dynamixel_sdk/lib:/home/lmz/armpiper/install/dynamixel_interfaces/lib:/home/lmz/armpiper/install/piper_msgs/lib:/home/lmz/armpiper/install/dynamixel_sdk_custom_interfaces/lib:/home/lmz/armpiper/install/dynamixel_hardware_interface/lib:/opt/ros/humble/opt/rviz_ogre_vendor/lib:/opt/ros/humble/lib/x86_64-linux-gnu:/opt/ros/humble/lib /usr/bin/cmake /home/lmz/armpiper/src/dynamixel_hardware_interface -DAMENT_CMAKE_SYMLINK_INSTALL=1 -DCMAKE_INSTALL_PREFIX=/home/lmz/armpiper/install/dynamixel_hardware_interface
+[0.062s] -- The C compiler identification is GNU 11.4.0
+[0.110s] -- The CXX compiler identification is GNU 11.4.0
+[0.116s] -- Detecting C compiler ABI info
+[0.179s] -- Detecting C compiler ABI info - done
+[0.187s] -- Check for working C compiler: /usr/bin/cc - skipped
+[0.187s] -- Detecting C compile features
+[0.188s] -- Detecting C compile features - done
+[0.189s] -- Detecting CXX compiler ABI info
+[0.259s] -- Detecting CXX compiler ABI info - done
+[0.269s] -- Check for working CXX compiler: /usr/bin/c++ - skipped
+[0.269s] -- Detecting CXX compile features
+[0.269s] -- Detecting CXX compile features - done
+[0.272s] -- Found ament_cmake: 1.3.11 (/opt/ros/humble/share/ament_cmake/cmake)
+[0.421s] -- Found Python3: /usr/bin/python3 (found version "3.10.12") found components: Interpreter 
+[0.485s] -- Override CMake install command with custom implementation using symlinks instead of copying resources
+[0.520s] -- Found hardware_interface: 2.51.0 (/opt/ros/humble/share/hardware_interface/cmake)
+[0.554s] -- Found rosidl_generator_c: 3.1.6 (/opt/ros/humble/share/rosidl_generator_c/cmake)
+[0.559s] -- Found rosidl_adapter: 3.1.6 (/opt/ros/humble/share/rosidl_adapter/cmake)
+[0.566s] -- Found rosidl_generator_cpp: 3.1.6 (/opt/ros/humble/share/rosidl_generator_cpp/cmake)
+[0.576s] -- Using all available rosidl_typesupport_c: rosidl_typesupport_fastrtps_c;rosidl_typesupport_introspection_c
+[0.589s] -- Using all available rosidl_typesupport_cpp: rosidl_typesupport_fastrtps_cpp;rosidl_typesupport_introspection_cpp
+[0.738s] -- Found rmw_implementation_cmake: 6.1.2 (/opt/ros/humble/share/rmw_implementation_cmake/cmake)
+[0.741s] -- Found rmw_cyclonedds_cpp: 1.3.4 (/opt/ros/humble/share/rmw_cyclonedds_cpp/cmake)
+[0.759s] -- Using RMW implementation 'rmw_cyclonedds_cpp' as default
+[0.767s] -- Looking for pthread.h
+[0.833s] -- Looking for pthread.h - found
+[0.834s] -- Performing Test CMAKE_HAVE_LIBC_PTHREAD
+[0.897s] -- Performing Test CMAKE_HAVE_LIBC_PTHREAD - Success
+[0.898s] -- Found Threads: TRUE  
+[0.934s] -- Found realtime_tools: 2.14.0 (/opt/ros/humble/share/realtime_tools/cmake)
+[0.943s] -- Found dynamixel_sdk: 3.8.4 (/home/lmz/armpiper/install/dynamixel_sdk/share/dynamixel_sdk/cmake)
+[0.946s] -- Found std_srvs: 4.9.0 (/opt/ros/humble/share/std_srvs/cmake)
+[0.952s] -- Found dynamixel_interfaces: 1.0.1 (/home/lmz/armpiper/install/dynamixel_interfaces/share/dynamixel_interfaces/cmake)
+[0.965s] -- Found ament_lint_auto: 0.12.12 (/opt/ros/humble/share/ament_lint_auto/cmake)
+[1.034s] -- Added test 'copyright' to check source files copyright and LICENSE
+[1.036s] -- Added test 'cppcheck' to perform static code analysis on C / C++ code
+[1.036s] -- Configured cppcheck include dirs: /home/lmz/armpiper/src/dynamixel_hardware_interface/include;$<BUILD_INTERFACE:/home/lmz/armpiper/src/dynamixel_hardware_interface/include>
+[1.036s] -- Configured cppcheck exclude dirs and/or files: 
+[1.037s] -- Added test 'cpplint' to check C / C++ code against the Google style
+[1.037s] -- Configured cpplint exclude dirs and/or files: 
+[1.038s] -- Added test 'lint_cmake' to check CMake code style
+[1.040s] -- Added test 'uncrustify' to check C / C++ code style
+[1.040s] -- Configured uncrustify additional arguments: 
+[1.041s] -- Added test 'xmllint' to check XML markup files
+[1.043s] -- Configuring done
+[1.050s] -- Generating done
+[1.053s] -- Build files have been written to: /home/lmz/armpiper/build/dynamixel_hardware_interface
+[1.059s] Invoked command in '/home/lmz/armpiper/build/dynamixel_hardware_interface' returned '0': CMAKE_PREFIX_PATH=/home/lmz/armpiper/install/dynamixel_sdk:/home/lmz/armpiper/install/dynamixel_interfaces:/home/lmz/armpiper/install/piper_with_gripper_moveit:/home/lmz/armpiper/install/piper_no_gripper_moveit:/home/lmz/armpiper/install/piper_mujoco:/home/lmz/armpiper/install/piper_msgs:/home/lmz/armpiper/install/piper_humble:/home/lmz/armpiper/install/piper_gazebo:/home/lmz/armpiper/install/piper_description:/home/lmz/armpiper/install/open_manipulator:/home/lmz/armpiper/install/open_manipulator_x_bringup:/home/lmz/armpiper/install/open_manipulator_x_description:/home/lmz/armpiper/install/dynamixel_sdk_examples:/home/lmz/armpiper/install/dynamixel_sdk_custom_interfaces:/home/lmz/armpiper/install/dynamixel_hardware_interface:/home/lmz/armpiper/install/vla:/home/lmz/armpiper/install/interface:/home/lmz/armpiper/install/piper:/home/lmz/armpiper/install/leapsim:/home/lmz/armpiper/install/follow:/home/lmz/armpiper/install/arm_control_pkg:/opt/ros/humble LD_LIBRARY_PATH=/home/lmz/armpiper/install/dynamixel_sdk/lib:/home/lmz/armpiper/install/dynamixel_interfaces/lib:/home/lmz/armpiper/install/piper_msgs/lib:/home/lmz/armpiper/install/dynamixel_sdk_custom_interfaces/lib:/home/lmz/armpiper/install/dynamixel_hardware_interface/lib:/opt/ros/humble/opt/rviz_ogre_vendor/lib:/opt/ros/humble/lib/x86_64-linux-gnu:/opt/ros/humble/lib /usr/bin/cmake /home/lmz/armpiper/src/dynamixel_hardware_interface -DAMENT_CMAKE_SYMLINK_INSTALL=1 -DCMAKE_INSTALL_PREFIX=/home/lmz/armpiper/install/dynamixel_hardware_interface
+[1.061s] Invoking command in '/home/lmz/armpiper/build/dynamixel_hardware_interface': CMAKE_PREFIX_PATH=/home/lmz/armpiper/install/dynamixel_sdk:/home/lmz/armpiper/install/dynamixel_interfaces:/home/lmz/armpiper/install/piper_with_gripper_moveit:/home/lmz/armpiper/install/piper_no_gripper_moveit:/home/lmz/armpiper/install/piper_mujoco:/home/lmz/armpiper/install/piper_msgs:/home/lmz/armpiper/install/piper_humble:/home/lmz/armpiper/install/piper_gazebo:/home/lmz/armpiper/install/piper_description:/home/lmz/armpiper/install/open_manipulator:/home/lmz/armpiper/install/open_manipulator_x_bringup:/home/lmz/armpiper/install/open_manipulator_x_description:/home/lmz/armpiper/install/dynamixel_sdk_examples:/home/lmz/armpiper/install/dynamixel_sdk_custom_interfaces:/home/lmz/armpiper/install/dynamixel_hardware_interface:/home/lmz/armpiper/install/vla:/home/lmz/armpiper/install/interface:/home/lmz/armpiper/install/piper:/home/lmz/armpiper/install/leapsim:/home/lmz/armpiper/install/follow:/home/lmz/armpiper/install/arm_control_pkg:/opt/ros/humble LD_LIBRARY_PATH=/home/lmz/armpiper/install/dynamixel_sdk/lib:/home/lmz/armpiper/install/dynamixel_interfaces/lib:/home/lmz/armpiper/install/piper_msgs/lib:/home/lmz/armpiper/install/dynamixel_sdk_custom_interfaces/lib:/home/lmz/armpiper/install/dynamixel_hardware_interface/lib:/opt/ros/humble/opt/rviz_ogre_vendor/lib:/opt/ros/humble/lib/x86_64-linux-gnu:/opt/ros/humble/lib /usr/bin/cmake --build /home/lmz/armpiper/build/dynamixel_hardware_interface -- -j16 -l16
+[1.108s] [ 75%] [32mBuilding CXX object CMakeFiles/dynamixel_hardware_interface.dir/src/dynamixel_hardware_interface.cpp.o[0m
+[1.108s] [ 75%] [32mBuilding CXX object CMakeFiles/dynamixel_hardware_interface.dir/src/dynamixel/dynamixel.cpp.o[0m
+[1.108s] [ 75%] [32mBuilding CXX object CMakeFiles/dynamixel_hardware_interface.dir/src/dynamixel/dynamixel_info.cpp.o[0m
+[7.095s] [100%] [32m[1mLinking CXX shared library libdynamixel_hardware_interface.so[0m
+[7.419s] [100%] Built target dynamixel_hardware_interface
+[7.428s] Invoked command in '/home/lmz/armpiper/build/dynamixel_hardware_interface' returned '0': CMAKE_PREFIX_PATH=/home/lmz/armpiper/install/dynamixel_sdk:/home/lmz/armpiper/install/dynamixel_interfaces:/home/lmz/armpiper/install/piper_with_gripper_moveit:/home/lmz/armpiper/install/piper_no_gripper_moveit:/home/lmz/armpiper/install/piper_mujoco:/home/lmz/armpiper/install/piper_msgs:/home/lmz/armpiper/install/piper_humble:/home/lmz/armpiper/install/piper_gazebo:/home/lmz/armpiper/install/piper_description:/home/lmz/armpiper/install/open_manipulator:/home/lmz/armpiper/install/open_manipulator_x_bringup:/home/lmz/armpiper/install/open_manipulator_x_description:/home/lmz/armpiper/install/dynamixel_sdk_examples:/home/lmz/armpiper/install/dynamixel_sdk_custom_interfaces:/home/lmz/armpiper/install/dynamixel_hardware_interface:/home/lmz/armpiper/install/vla:/home/lmz/armpiper/install/interface:/home/lmz/armpiper/install/piper:/home/lmz/armpiper/install/leapsim:/home/lmz/armpiper/install/follow:/home/lmz/armpiper/install/arm_control_pkg:/opt/ros/humble LD_LIBRARY_PATH=/home/lmz/armpiper/install/dynamixel_sdk/lib:/home/lmz/armpiper/install/dynamixel_interfaces/lib:/home/lmz/armpiper/install/piper_msgs/lib:/home/lmz/armpiper/install/dynamixel_sdk_custom_interfaces/lib:/home/lmz/armpiper/install/dynamixel_hardware_interface/lib:/opt/ros/humble/opt/rviz_ogre_vendor/lib:/opt/ros/humble/lib/x86_64-linux-gnu:/opt/ros/humble/lib /usr/bin/cmake --build /home/lmz/armpiper/build/dynamixel_hardware_interface -- -j16 -l16
+[7.430s] Invoking command in '/home/lmz/armpiper/build/dynamixel_hardware_interface': CMAKE_PREFIX_PATH=/home/lmz/armpiper/install/dynamixel_sdk:/home/lmz/armpiper/install/dynamixel_interfaces:/home/lmz/armpiper/install/piper_with_gripper_moveit:/home/lmz/armpiper/install/piper_no_gripper_moveit:/home/lmz/armpiper/install/piper_mujoco:/home/lmz/armpiper/install/piper_msgs:/home/lmz/armpiper/install/piper_humble:/home/lmz/armpiper/install/piper_gazebo:/home/lmz/armpiper/install/piper_description:/home/lmz/armpiper/install/open_manipulator:/home/lmz/armpiper/install/open_manipulator_x_bringup:/home/lmz/armpiper/install/open_manipulator_x_description:/home/lmz/armpiper/install/dynamixel_sdk_examples:/home/lmz/armpiper/install/dynamixel_sdk_custom_interfaces:/home/lmz/armpiper/install/dynamixel_hardware_interface:/home/lmz/armpiper/install/vla:/home/lmz/armpiper/install/interface:/home/lmz/armpiper/install/piper:/home/lmz/armpiper/install/leapsim:/home/lmz/armpiper/install/follow:/home/lmz/armpiper/install/arm_control_pkg:/opt/ros/humble LD_LIBRARY_PATH=/home/lmz/armpiper/install/dynamixel_sdk/lib:/home/lmz/armpiper/install/dynamixel_interfaces/lib:/home/lmz/armpiper/install/piper_msgs/lib:/home/lmz/armpiper/install/dynamixel_sdk_custom_interfaces/lib:/home/lmz/armpiper/install/dynamixel_hardware_interface/lib:/opt/ros/humble/opt/rviz_ogre_vendor/lib:/opt/ros/humble/lib/x86_64-linux-gnu:/opt/ros/humble/lib /usr/bin/cmake --install /home/lmz/armpiper/build/dynamixel_hardware_interface
+[7.436s] -- Install configuration: ""
+[7.437s] -- Execute custom install script
+[7.437s] -- Symlinking: /home/lmz/armpiper/install/dynamixel_hardware_interface/share/dynamixel_hardware_interface//dynamixel_hardware_interface_plugin.xml
+[7.447s] -- Symlinking: /home/lmz/armpiper/install/dynamixel_hardware_interface/lib/libdynamixel_hardware_interface.so
+[7.458s] -- Symlinking: /home/lmz/armpiper/install/dynamixel_hardware_interface/include/dynamixel_hardware_interface/dynamixel/dynamixel.hpp
+[7.469s] -- Symlinking: /home/lmz/armpiper/install/dynamixel_hardware_interface/include/dynamixel_hardware_interface/dynamixel/dynamixel_info.hpp
+[7.480s] -- Symlinking: /home/lmz/armpiper/install/dynamixel_hardware_interface/include/dynamixel_hardware_interface/dynamixel_hardware_interface.hpp
+[7.493s] -- Symlinking: /home/lmz/armpiper/install/dynamixel_hardware_interface/include/dynamixel_hardware_interface/visibility_control.h
+[7.505s] -- Symlinking: /home/lmz/armpiper/install/dynamixel_hardware_interface/lib/dynamixel_hardware_interface//create_udev_rules
+[7.518s] -- Symlinking: /home/lmz/armpiper/install/dynamixel_hardware_interface/share/dynamixel_hardware_interface//scripts/99-manipulator-cdc.rules
+[7.529s] -- Symlinking: /home/lmz/armpiper/install/dynamixel_hardware_interface/share/dynamixel_hardware_interface//scripts/create_udev_rules
+[7.541s] -- Symlinking: /home/lmz/armpiper/install/dynamixel_hardware_interface/share/dynamixel_hardware_interface/param/dxl_model/2xc430_w250.model
+[7.552s] -- Symlinking: /home/lmz/armpiper/install/dynamixel_hardware_interface/share/dynamixel_hardware_interface/param/dxl_model/2xl430_w250.model
+[7.564s] -- Symlinking: /home/lmz/armpiper/install/dynamixel_hardware_interface/share/dynamixel_hardware_interface/param/dxl_model/dynamixel.model
+[7.575s] -- Symlinking: /home/lmz/armpiper/install/dynamixel_hardware_interface/share/dynamixel_hardware_interface/param/dxl_model/ffw_g10_led.model
+[7.586s] -- Symlinking: /home/lmz/armpiper/install/dynamixel_hardware_interface/share/dynamixel_hardware_interface/param/dxl_model/ffw_g10_rcu.model
+[7.599s] -- Symlinking: /home/lmz/armpiper/install/dynamixel_hardware_interface/share/dynamixel_hardware_interface/param/dxl_model/ffw_g40_imu.model
+[7.610s] -- Symlinking: /home/lmz/armpiper/install/dynamixel_hardware_interface/share/dynamixel_hardware_interface/param/dxl_model/ffw_sg2_drive_1.model
+[7.622s] -- Symlinking: /home/lmz/armpiper/install/dynamixel_hardware_interface/share/dynamixel_hardware_interface/param/dxl_model/ffw_sg2_drive_2.model
+[7.633s] -- Symlinking: /home/lmz/armpiper/install/dynamixel_hardware_interface/share/dynamixel_hardware_interface/param/dxl_model/ffw_sg2_drive_3.model
+[7.644s] -- Symlinking: /home/lmz/armpiper/install/dynamixel_hardware_interface/share/dynamixel_hardware_interface/param/dxl_model/ffw_sg2_steer_1.model
+[7.654s] -- Symlinking: /home/lmz/armpiper/install/dynamixel_hardware_interface/share/dynamixel_hardware_interface/param/dxl_model/ffw_sg2_steer_2.model
+[7.664s] -- Symlinking: /home/lmz/armpiper/install/dynamixel_hardware_interface/share/dynamixel_hardware_interface/param/dxl_model/ffw_sg2_steer_3.model
+[7.675s] -- Symlinking: /home/lmz/armpiper/install/dynamixel_hardware_interface/share/dynamixel_hardware_interface/param/dxl_model/omy_end.model
+[7.686s] -- Symlinking: /home/lmz/armpiper/install/dynamixel_hardware_interface/share/dynamixel_hardware_interface/param/dxl_model/omy_end_rh_p12_rn.model
+[7.698s] -- Symlinking: /home/lmz/armpiper/install/dynamixel_hardware_interface/share/dynamixel_hardware_interface/param/dxl_model/omy_hat.model
+[7.707s] -- Symlinking: /home/lmz/armpiper/install/dynamixel_hardware_interface/share/dynamixel_hardware_interface/param/dxl_model/ph42_020_s300.model
+[7.715s] -- Symlinking: /home/lmz/armpiper/install/dynamixel_hardware_interface/share/dynamixel_hardware_interface/param/dxl_model/rh_p12_rn.model
+[7.724s] -- Symlinking: /home/lmz/armpiper/install/dynamixel_hardware_interface/share/dynamixel_hardware_interface/param/dxl_model/sensorxel_joy.model
+[7.731s] -- Symlinking: /home/lmz/armpiper/install/dynamixel_hardware_interface/share/dynamixel_hardware_interface/param/dxl_model/xc330_m181.model
+[7.736s] -- Symlinking: /home/lmz/armpiper/install/dynamixel_hardware_interface/share/dynamixel_hardware_interface/param/dxl_model/xc330_m288.model
+[7.743s] -- Symlinking: /home/lmz/armpiper/install/dynamixel_hardware_interface/share/dynamixel_hardware_interface/param/dxl_model/xc330_t181.model
+[7.751s] -- Symlinking: /home/lmz/armpiper/install/dynamixel_hardware_interface/share/dynamixel_hardware_interface/param/dxl_model/xc330_t288.model
+[7.757s] -- Symlinking: /home/lmz/armpiper/install/dynamixel_hardware_interface/share/dynamixel_hardware_interface/param/dxl_model/xc430_w150.model
+[7.762s] -- Symlinking: /home/lmz/armpiper/install/dynamixel_hardware_interface/share/dynamixel_hardware_interface/param/dxl_model/xc430_w240.model
+[7.772s] -- Symlinking: /home/lmz/armpiper/install/dynamixel_hardware_interface/share/dynamixel_hardware_interface/param/dxl_model/xd430_t210.model
+[7.781s] -- Symlinking: /home/lmz/armpiper/install/dynamixel_hardware_interface/share/dynamixel_hardware_interface/param/dxl_model/xd430_t350.model
+[7.794s] -- Symlinking: /home/lmz/armpiper/install/dynamixel_hardware_interface/share/dynamixel_hardware_interface/param/dxl_model/xd540_t150.model
+[7.807s] -- Symlinking: /home/lmz/armpiper/install/dynamixel_hardware_interface/share/dynamixel_hardware_interface/param/dxl_model/xd540_t270.model
+[7.821s] -- Symlinking: /home/lmz/armpiper/install/dynamixel_hardware_interface/share/dynamixel_hardware_interface/param/dxl_model/xh430_v210.model
+[7.834s] -- Symlinking: /home/lmz/armpiper/install/dynamixel_hardware_interface/share/dynamixel_hardware_interface/param/dxl_model/xh430_v350.model
+[7.842s] -- Symlinking: /home/lmz/armpiper/install/dynamixel_hardware_interface/share/dynamixel_hardware_interface/param/dxl_model/xh430_w210.model
+[7.851s] -- Symlinking: /home/lmz/armpiper/install/dynamixel_hardware_interface/share/dynamixel_hardware_interface/param/dxl_model/xh430_w350.model
+[7.860s] -- Symlinking: /home/lmz/armpiper/install/dynamixel_hardware_interface/share/dynamixel_hardware_interface/param/dxl_model/xh540_v150.model
+[7.870s] -- Symlinking: /home/lmz/armpiper/install/dynamixel_hardware_interface/share/dynamixel_hardware_interface/param/dxl_model/xh540_v270.model
+[7.882s] -- Symlinking: /home/lmz/armpiper/install/dynamixel_hardware_interface/share/dynamixel_hardware_interface/param/dxl_model/xh540_w150.model
+[7.893s] -- Symlinking: /home/lmz/armpiper/install/dynamixel_hardware_interface/share/dynamixel_hardware_interface/param/dxl_model/xh540_w270.model
+[7.906s] -- Symlinking: /home/lmz/armpiper/install/dynamixel_hardware_interface/share/dynamixel_hardware_interface/param/dxl_model/xl320.model
+[7.916s] -- Symlinking: /home/lmz/armpiper/install/dynamixel_hardware_interface/share/dynamixel_hardware_interface/param/dxl_model/xl330_m077.model
+[7.928s] -- Symlinking: /home/lmz/armpiper/install/dynamixel_hardware_interface/share/dynamixel_hardware_interface/param/dxl_model/xl330_m288.model
+[7.936s] -- Symlinking: /home/lmz/armpiper/install/dynamixel_hardware_interface/share/dynamixel_hardware_interface/param/dxl_model/xl430_w250.model
+[7.946s] -- Symlinking: /home/lmz/armpiper/install/dynamixel_hardware_interface/share/dynamixel_hardware_interface/param/dxl_model/xm430_w210.model
+[7.955s] -- Symlinking: /home/lmz/armpiper/install/dynamixel_hardware_interface/share/dynamixel_hardware_interface/param/dxl_model/xm430_w350.model
+[7.968s] -- Symlinking: /home/lmz/armpiper/install/dynamixel_hardware_interface/share/dynamixel_hardware_interface/param/dxl_model/xm540_w150.model
+[7.979s] -- Symlinking: /home/lmz/armpiper/install/dynamixel_hardware_interface/share/dynamixel_hardware_interface/param/dxl_model/xm540_w270.model
+[7.991s] -- Symlinking: /home/lmz/armpiper/install/dynamixel_hardware_interface/share/dynamixel_hardware_interface/param/dxl_model/xw430_t200.model
+[8.002s] -- Symlinking: /home/lmz/armpiper/install/dynamixel_hardware_interface/share/dynamixel_hardware_interface/param/dxl_model/xw430_t333.model
+[8.010s] -- Symlinking: /home/lmz/armpiper/install/dynamixel_hardware_interface/share/dynamixel_hardware_interface/param/dxl_model/xw540_h260.model
+[8.016s] -- Symlinking: /home/lmz/armpiper/install/dynamixel_hardware_interface/share/dynamixel_hardware_interface/param/dxl_model/xw540_t140.model
+[8.025s] -- Symlinking: /home/lmz/armpiper/install/dynamixel_hardware_interface/share/dynamixel_hardware_interface/param/dxl_model/xw540_t260.model
+[8.033s] -- Symlinking: /home/lmz/armpiper/install/dynamixel_hardware_interface/share/dynamixel_hardware_interface/param/dxl_model/ym070_210_a099.model
+[8.041s] -- Symlinking: /home/lmz/armpiper/install/dynamixel_hardware_interface/share/dynamixel_hardware_interface/param/dxl_model/ym070_210_m001.model
+[8.052s] -- Symlinking: /home/lmz/armpiper/install/dynamixel_hardware_interface/share/dynamixel_hardware_interface/param/dxl_model/ym070_210_r051.model
+[8.064s] -- Symlinking: /home/lmz/armpiper/install/dynamixel_hardware_interface/share/dynamixel_hardware_interface/param/dxl_model/ym070_210_r099.model
+[8.076s] -- Symlinking: /home/lmz/armpiper/install/dynamixel_hardware_interface/share/dynamixel_hardware_interface/param/dxl_model/ym080_220_m001.model
+[8.088s] -- Symlinking: /home/lmz/armpiper/install/dynamixel_hardware_interface/share/dynamixel_hardware_interface/param/dxl_model/ym080_230_a099.model
+[8.101s] -- Symlinking: /home/lmz/armpiper/install/dynamixel_hardware_interface/share/dynamixel_hardware_interface/param/dxl_model/ym080_230_b001.model
+[8.109s] -- Symlinking: /home/lmz/armpiper/install/dynamixel_hardware_interface/share/dynamixel_hardware_interface/param/dxl_model/ym080_230_r051.model
+[8.114s] -- Symlinking: /home/lmz/armpiper/install/dynamixel_hardware_interface/share/dynamixel_hardware_interface/param/dxl_model/ym080_230_r099.model
+[8.123s] -- Symlinking: /home/lmz/armpiper/install/dynamixel_hardware_interface/share/dynamixel_hardware_interface/environment/library_path.sh
+[8.129s] -- Symlinking: /home/lmz/armpiper/install/dynamixel_hardware_interface/share/dynamixel_hardware_interface/environment/library_path.dsv
+[8.139s] -- Symlinking: /home/lmz/armpiper/install/dynamixel_hardware_interface/share/ament_index/resource_index/package_run_dependencies/dynamixel_hardware_interface
+[8.149s] -- Symlinking: /home/lmz/armpiper/install/dynamixel_hardware_interface/share/ament_index/resource_index/parent_prefix_path/dynamixel_hardware_interface
+[8.160s] -- Symlinking: /home/lmz/armpiper/install/dynamixel_hardware_interface/share/dynamixel_hardware_interface/environment/ament_prefix_path.sh
+[8.172s] -- Symlinking: /home/lmz/armpiper/install/dynamixel_hardware_interface/share/dynamixel_hardware_interface/environment/ament_prefix_path.dsv
+[8.184s] -- Symlinking: /home/lmz/armpiper/install/dynamixel_hardware_interface/share/dynamixel_hardware_interface/environment/path.sh
+[8.196s] -- Symlinking: /home/lmz/armpiper/install/dynamixel_hardware_interface/share/dynamixel_hardware_interface/environment/path.dsv
+[8.208s] -- Symlinking: /home/lmz/armpiper/install/dynamixel_hardware_interface/share/dynamixel_hardware_interface/local_setup.bash
+[8.220s] -- Symlinking: /home/lmz/armpiper/install/dynamixel_hardware_interface/share/dynamixel_hardware_interface/local_setup.sh
+[8.231s] -- Symlinking: /home/lmz/armpiper/install/dynamixel_hardware_interface/share/dynamixel_hardware_interface/local_setup.zsh
+[8.239s] -- Symlinking: /home/lmz/armpiper/install/dynamixel_hardware_interface/share/dynamixel_hardware_interface/local_setup.dsv
+[8.249s] -- Symlinking: /home/lmz/armpiper/install/dynamixel_hardware_interface/share/dynamixel_hardware_interface/package.dsv
+[8.260s] -- Symlinking: /home/lmz/armpiper/install/dynamixel_hardware_interface/share/ament_index/resource_index/packages/dynamixel_hardware_interface
+[8.270s] -- Symlinking: /home/lmz/armpiper/install/dynamixel_hardware_interface/share/ament_index/resource_index/hardware_interface__pluginlib__plugin/dynamixel_hardware_interface
+[8.280s] -- Symlinking: /home/lmz/armpiper/install/dynamixel_hardware_interface/share/dynamixel_hardware_interface/cmake/ament_cmake_export_include_directories-extras.cmake
+[8.288s] -- Symlinking: /home/lmz/armpiper/install/dynamixel_hardware_interface/share/dynamixel_hardware_interface/cmake/ament_cmake_export_libraries-extras.cmake
+[8.297s] -- Symlinking: /home/lmz/armpiper/install/dynamixel_hardware_interface/share/dynamixel_hardware_interface/cmake/ament_cmake_export_dependencies-extras.cmake
+[8.305s] -- Symlinking: /home/lmz/armpiper/install/dynamixel_hardware_interface/share/dynamixel_hardware_interface/cmake/dynamixel_hardware_interfaceConfig.cmake
+[8.314s] -- Symlinking: /home/lmz/armpiper/install/dynamixel_hardware_interface/share/dynamixel_hardware_interface/cmake/dynamixel_hardware_interfaceConfig-version.cmake
+[8.319s] -- Symlinking: /home/lmz/armpiper/install/dynamixel_hardware_interface/share/dynamixel_hardware_interface/package.xml
+[8.329s] Invoked command in '/home/lmz/armpiper/build/dynamixel_hardware_interface' returned '0': CMAKE_PREFIX_PATH=/home/lmz/armpiper/install/dynamixel_sdk:/home/lmz/armpiper/install/dynamixel_interfaces:/home/lmz/armpiper/install/piper_with_gripper_moveit:/home/lmz/armpiper/install/piper_no_gripper_moveit:/home/lmz/armpiper/install/piper_mujoco:/home/lmz/armpiper/install/piper_msgs:/home/lmz/armpiper/install/piper_humble:/home/lmz/armpiper/install/piper_gazebo:/home/lmz/armpiper/install/piper_description:/home/lmz/armpiper/install/open_manipulator:/home/lmz/armpiper/install/open_manipulator_x_bringup:/home/lmz/armpiper/install/open_manipulator_x_description:/home/lmz/armpiper/install/dynamixel_sdk_examples:/home/lmz/armpiper/install/dynamixel_sdk_custom_interfaces:/home/lmz/armpiper/install/dynamixel_hardware_interface:/home/lmz/armpiper/install/vla:/home/lmz/armpiper/install/interface:/home/lmz/armpiper/install/piper:/home/lmz/armpiper/install/leapsim:/home/lmz/armpiper/install/follow:/home/lmz/armpiper/install/arm_control_pkg:/opt/ros/humble LD_LIBRARY_PATH=/home/lmz/armpiper/install/dynamixel_sdk/lib:/home/lmz/armpiper/install/dynamixel_interfaces/lib:/home/lmz/armpiper/install/piper_msgs/lib:/home/lmz/armpiper/install/dynamixel_sdk_custom_interfaces/lib:/home/lmz/armpiper/install/dynamixel_hardware_interface/lib:/opt/ros/humble/opt/rviz_ogre_vendor/lib:/opt/ros/humble/lib/x86_64-linux-gnu:/opt/ros/humble/lib /usr/bin/cmake --install /home/lmz/armpiper/build/dynamixel_hardware_interface
