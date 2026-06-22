@@ -13,7 +13,7 @@ from interface.motion_utils import refresh_current_joint_states
 
 ARM_INITIAL_JOINTS = np.array([0.0, 0.0, 0.0, 0.0, 0.2121, 0.0], dtype=float)
 HAND_INITIAL_JOINTS = np.zeros(16, dtype=float)
-HAND_INITIAL_JOINTS[[0, 8, 12]] = np.deg2rad(54.0)  # hand1, hand5, hand9
+HAND_INITIAL_JOINTS[[0, 8, 12]] = np.deg2rad(49.0)  # hand1, hand5, hand9
 HAND_INITIAL_JOINTS[[3, 11, 15]] = np.deg2rad(15.0)  # hand3, hand7, hand11
 HAND_INITIAL_JOINTS[[2, 10, 14]] = np.deg2rad(30.0)  # hand2, hand6, hand10
 

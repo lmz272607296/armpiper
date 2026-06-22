@@ -21,6 +21,7 @@ setup(
             'cfg/train/*',
             'cache/*',
             'runs/*',
+            'weights/*',
         ],
     },
     data_files=[
@@ -59,6 +60,7 @@ setup(
     entry_points={
         'console_scripts': [
          'ultimate_yolo_node_cpu=interface.ultimate_yolo_node_cpu:main',
+          'hand_inference_controller=interface.run_inference:main_ros',
           'position_player=interface.position_player:main',
          'position_record=interface.position_record:main',
           'action1_4_move=interface.action1_4_move:main',

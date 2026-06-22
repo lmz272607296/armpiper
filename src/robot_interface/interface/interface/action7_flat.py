@@ -161,7 +161,7 @@ class ObjectReleaseNode(Node):
 
         self.get_logger().info(f"[{object_type}] Phase 4/5: reset arm after hand is fully open.")
         self.wait_between_phases(self.post_hand_open_pause_sec, leap=leap, arm=arm)
-        self.reset_arm_to_origin(arm)
+        self.reset_arm_after_release(arm, object_type)
 
         self.get_logger().info(f"[{object_type}] Phase 5/5: move hand to preset reset pose.")
         self.hand_to_reset_pose(leap)
@@ -259,6 +259,47 @@ class ObjectReleaseNode(Node):
     def reset_arm_to_origin(self, arm):
         if self.arm_reset_steps <= 0:
             raise ValueError("arm_reset_steps must be positive")
+
+        _, current_arm = refresh_current_joint_states(
+            arm=arm,
+            need_arm=True,
+        )
+        arm_zero = ARM_RELEASE_RESET_JOINTS.reshape(1, arm.joints_num)
+        command_scaled_arm_motion(
+            arm,
+            current_arm,
+            arm_zero,
+            steps=self.arm_reset_steps,
+            duration=self.arm_reset_duration,
+            extra_wait=self.arm_reset_extra_wait,
+        )
+
+    def reset_arm_after_release(self, arm, object_type):
+        if object_type == BOTTLE:
+            self.reset_bottle_arm_to_origin(arm)
+            return
+
+        self.reset_arm_to_origin(arm)
+
+    def reset_bottle_arm_to_origin(self, arm):
+        if self.arm_reset_steps <= 0:
+            raise ValueError("arm_reset_steps must be positive")
+
+        _, current_arm = refresh_current_joint_states(
+            arm=arm,
+            need_arm=True,
+        )
+        arm_body_reset = ARM_RELEASE_RESET_JOINTS.reshape(1, arm.joints_num).copy()
+        arm_body_reset[:, 0:1] = current_arm[:, 0:1]
+        arm_body_reset[:, 5:6] = current_arm[:, 5:6]
+        command_scaled_arm_motion(
+            arm,
+            current_arm,
+            arm_body_reset,
+            steps=self.arm_reset_steps,
+            duration=self.arm_reset_duration,
+            extra_wait=self.arm_reset_extra_wait,
+        )
 
         _, current_arm = refresh_current_joint_states(
             arm=arm,

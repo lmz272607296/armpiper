@@ -1,10 +1,11 @@
+import json
 from types import SimpleNamespace
 
 import numpy as np
 import pytest
 
 from interface import action_utils
-from interface.action6_gsp import HandCurrentSafetyMonitor, MotorOvercurrentError
+from interface.action6_gsp import FRUIT, HandCurrentSafetyMonitor, MotorOvercurrentError, ObjectGraspNode, normalize_object_type
 from interface.hand_controller import extract_currents_from_dynamic_joint_state
 
 
@@ -28,6 +29,12 @@ def test_extract_currents_from_dynamic_joint_state_reads_supported_interfaces():
     currents = extract_currents_from_dynamic_joint_state(msg, joint_names={"hand0", "hand1"})
 
     assert currents == {"hand0": 301.0, "hand1": -299.0}
+
+
+@pytest.mark.parametrize("object_type", ["chair", "tv"])
+def test_normalize_object_type_rejects_non_grasp_objects_as_fruit(object_type):
+    with pytest.raises(ValueError):
+        normalize_object_type(object_type)
 
 
 class FakeLogger:
@@ -125,3 +132,26 @@ def test_execute_bottle_grasp_hand_uses_safety_check_during_waits(monkeypatch):
 
     with pytest.raises(RuntimeError, match="stop"):
         action_utils.execute_bottle_grasp_hand(FakeHand(), safety_check=stop_now)
+
+
+def test_action6_uses_selected_yolo_json_detection_as_grasp_target():
+    node = ObjectGraspNode.__new__(ObjectGraspNode)
+    node.task_running = False
+    node.object_type = FRUIT
+    node.position = None
+    node.position_label = 'right'
+    node.awaiting_pose_target = True
+    node.get_logger = lambda: FakeLogger()
+
+    msg = SimpleNamespace(data=json.dumps([
+        {
+            'object_type': FRUIT,
+            'confidence': 0.9,
+            'center_3d': {'x': 0.55, 'y': 0.02, 'z': 0.03},
+        }
+    ]))
+
+    node.yolo_detections_callback(msg)
+
+    np.testing.assert_allclose(node.position, np.array([0.55, 0.02, 0.03], dtype=float))
+    assert node.awaiting_pose_target is False

@@ -51,7 +51,7 @@ FOLLOW_MOVE_STEPS = 15
 HAND_OPEN_TARGET_JOINTS = np.zeros(16, dtype=float)
 HAND_OPEN_SPEED_MULTIPLIER = 2.0
 DEFAULT_GRASP_POSITION = "right"
-HAND_CURRENT_LIMIT_MA = 350.0
+HAND_CURRENT_LIMIT_MA = 400.0
 HAND_CURRENT_CONFIRM_DELAY_SEC = 2.0
 HAND_CURRENT_POLL_INTERVAL_SEC = 0.05
 ARM_SPEEDUP_FACTOR = 2.5
@@ -101,8 +101,6 @@ def normalize_object_type(object_type):
         "cube": FRUIT,
         "orange": FRUIT,
         "apple": FRUIT,
-        "chair": FRUIT,
-        "tv": FRUIT,
     }.get(normalized, normalized)
     if normalized not in GRASP_OBJECT_CONFIGS:
         raise ValueError(
@@ -395,6 +393,8 @@ class ObjectGraspNode(Node):
             f"center={np.round(target_center, 4)}, "
             f"frame={selected_detection.get('center_3d_frame', 'unknown')}"
         )
+        self.position = target_center.copy()
+        self.awaiting_pose_target = False
 
     def select_detection_from_yolo(self, detections):
         candidates = []

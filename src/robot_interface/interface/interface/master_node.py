@@ -32,6 +32,8 @@ DEFAULT_TCP_REMOTE_PORT = 5000
 INPUT_MODE_SWITCH_TOPIC = '/master_input_mode'
 MASTER_RECEIVED_SIGNAL_TOPIC = '/master_received_signal'
 MASTER_RECEIVED_SIGNAL_PERIOD_SEC = 0.2
+CONTROL_MESSAGE_REPEAT_COUNT = 3
+CONTROL_MESSAGE_REPEAT_INTERVAL_SEC = 0.05
 
 BASE_POSITION_LIMITS = {
     BOTTLE: {
@@ -785,7 +787,7 @@ class MasterNode(Node):
         self.launch_action('action6_gsp')
         self.wait_for_subscribers(self.object_type_pub, self.object_type_topic)
         self.wait_for_subscribers(self.grasp_pose_pub, '/grasp_target_pose')
-        self.publish_object_type(object_type)
+        self.publish_object_type_repeated(object_type)
 
         pos = self.clamp_detection_position(object_type, detection['position'])
         grasp_pose = PoseStamped()
@@ -796,7 +798,7 @@ class MasterNode(Node):
         grasp_pose.pose.position.z = pos['z']
         grasp_pose.pose.orientation.w = 1.0
 
-        self.grasp_pose_pub.publish(grasp_pose)
+        self.publish_repeated(self.grasp_pose_pub, grasp_pose)
 
         self.holding_object = True
         self.held_object = object_type
@@ -1008,13 +1010,24 @@ class MasterNode(Node):
         msg.data = object_type
         self.object_type_pub.publish(msg)
 
+    def publish_object_type_repeated(self, object_type):
+        msg = String()
+        msg.data = object_type
+        self.publish_repeated(self.object_type_pub, msg)
+
     def publish_grasp_selection(self, object_type, position_label):
         msg = String()
         msg.data = json.dumps({
             'object_type': object_type,
             'position_label': self.resolve_grasp_position_label(position_label),
         })
-        self.grasp_selection_pub.publish(msg)
+        self.publish_repeated(self.grasp_selection_pub, msg)
+
+    def publish_repeated(self, publisher, msg):
+        for index in range(CONTROL_MESSAGE_REPEAT_COUNT):
+            publisher.publish(msg)
+            if index + 1 < CONTROL_MESSAGE_REPEAT_COUNT:
+                time.sleep(CONTROL_MESSAGE_REPEAT_INTERVAL_SEC)
 
     def publish_arm_action(self, payload):
         msg = String()

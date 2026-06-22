@@ -7,7 +7,7 @@ import numpy as np
 
 
 BOTTLE_GRASP_HEIGHT = 0.15
-FRUIT_GRASP_HEIGHT = 0.18
+FRUIT_GRASP_HEIGHT = 0.165
 FRUIT_RELEASE_HEIGHT = 0.18
 DEFAULT_TABLE_Z = 0.0
 DEFAULT_BOTTLE_DIAMETER = 0.07
@@ -21,19 +21,22 @@ BOTTLE_HOVER_Y_OFFSET = 0.0
 # Bottle side-grasp angle offsets selected by bottle y position.
 # The values are in radians; use math.radians(...) to tune in degrees.
 #
-# y < -0.1           -> BOTTLE_RIGHT_APPROACH_ANGLE_OFFSET         ( 8 deg)
-# -0.1 <= y < -0.05  -> BOTTLE_RIGHT_MIDDLE_APPROACH_ANGLE_OFFSET  ( 9 deg)
-# -0.05 <= y <= 0.1  -> BOTTLE_MIDDLE_APPROACH_ANGLE_OFFSET        (11 deg)
-# 0.1 < y <= 0.2     -> BOTTLE_LEFT_APPROACH_ANGLE_OFFSET          ( 2 deg)
-# y > 0.2            -> BOTTLE_LEFT_FAR_APPROACH_ANGLE_OFFSET      (-1 deg)
+# Positive angle offsets bias the target toward -y; negative offsets bias toward +y.
+# y < -0.1           -> BOTTLE_RIGHT_APPROACH_ANGLE_OFFSET         (-y 8 deg)
+# -0.1 <= y < -0.05  -> BOTTLE_RIGHT_MIDDLE_APPROACH_ANGLE_OFFSET  (-y 9 deg)
+# -0.05 <= y <= 0.1  -> BOTTLE_MIDDLE_APPROACH_ANGLE_OFFSET        (-y 6 deg)
+# 0.1 < y <= 0.2     -> BOTTLE_LEFT_APPROACH_ANGLE_OFFSET          (-y 2 deg)
+# y > 0.2            -> BOTTLE_LEFT_FAR_APPROACH_ANGLE_OFFSET      (+y 1 deg)
 #
 # BOTTLE_APPROACH_ANGLE_OFFSET is the legacy/default offset and is kept here
 # for manual tuning or fallback use.
 BOTTLE_APPROACH_ANGLE_OFFSET = math.radians(4.0)
-BOTTLE_RIGHT_APPROACH_ANGLE_OFFSET = math.radians(8.0)
-BOTTLE_RIGHT_MIDDLE_APPROACH_ANGLE_OFFSET = math.radians(9.0)
+
+
+BOTTLE_RIGHT_APPROACH_ANGLE_OFFSET = math.radians(10.5)
+BOTTLE_RIGHT_MIDDLE_APPROACH_ANGLE_OFFSET = math.radians(9.7)
 BOTTLE_MIDDLE_APPROACH_ANGLE_OFFSET = math.radians(6)
-BOTTLE_LEFT_APPROACH_ANGLE_OFFSET = math.radians(2.0)
+BOTTLE_LEFT_APPROACH_ANGLE_OFFSET = math.radians(2.5)
 BOTTLE_LEFT_FAR_APPROACH_ANGLE_OFFSET = math.radians(-1.0)
 PALM_LINK_NAME = "palm_lower"
 BASE_LINK_NAME = "base_link"
@@ -196,13 +199,18 @@ def bottle_approach_angle_offset_for_y(y_coord):
     # -0.1 <= y < -0.05  -> right middle
     # y < -0.1           -> right
     if y_coord > 0.2:
+        # y > 0.2: bias toward +y by 1 deg.
         return BOTTLE_LEFT_FAR_APPROACH_ANGLE_OFFSET
     if y_coord > 0.1:
+        # 0.1 < y <= 0.2: bias toward -y by 2 deg.
         return BOTTLE_LEFT_APPROACH_ANGLE_OFFSET
     if -0.1 <= y_coord < -0.05:
+        # -0.1 <= y < -0.05: bias toward -y by 9 deg.
         return BOTTLE_RIGHT_MIDDLE_APPROACH_ANGLE_OFFSET
     if y_coord > -0.1:
+        # -0.05 <= y <= 0.1: bias toward -y by 6 deg.
         return BOTTLE_MIDDLE_APPROACH_ANGLE_OFFSET
+    # y < -0.1: bias toward -y by 8 deg.
     return BOTTLE_RIGHT_APPROACH_ANGLE_OFFSET
 
 

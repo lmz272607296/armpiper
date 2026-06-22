@@ -35,9 +35,11 @@ DEFAULT_SOFT_START_DURATION_SEC = 2.0
 DEFAULT_SOFT_START_RATE_HZ = 20.0
 DEFAULT_HOLD_COMMAND_DURATION_SEC = 0.12
 DEFAULT_ENABLE_STARTUP_CURRENT_LIMIT = True
-DEFAULT_STARTUP_CURRENT_LIMIT_MA = 450.0
+DEFAULT_STARTUP_CURRENT_LIMIT_MA = 550.0
 DEFAULT_OUTPUT_DIR = os.path.join(os.path.dirname(__file__), 'data')
 DEFAULT_PREVIEW_PLAY_RATE_HZ = 10.0
+DEFAULT_PREVIEW_PLAYBACK_SPEED_SCALE = 1.5
+DEFAULT_PREVIEW_INTERPOLATION_FACTOR = 2
 DEFAULT_PREVIEW_TEMP_DIR = '/tmp/opencode'
 DEFAULT_DXL_DATA_SERVICE_NAME = '/hand/dynamixel_hardware_interface/set_dxl_data'
 DEFAULT_DXL_DATA_SERVICE_TIMEOUT_SEC = 5.0
@@ -675,6 +677,8 @@ class PositionRecord(Node):
             '--ros-args',
             '-p', f'data_file:={preview_file_path}',
             '-p', f'play_rate_hz:={DEFAULT_PREVIEW_PLAY_RATE_HZ:.6f}',
+            '-p', f'playback_speed_scale:={DEFAULT_PREVIEW_PLAYBACK_SPEED_SCALE:.6f}',
+            '-p', f'interpolation_factor:={DEFAULT_PREVIEW_INTERPOLATION_FACTOR}',
             '-p', 'enable_initial_move:=false',
             '-p', 'enable_wrist_alignment:=false',
             '-p', 'trajectory_includes_hand_position_bias:=true',

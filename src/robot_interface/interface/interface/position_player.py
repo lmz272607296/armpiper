@@ -22,6 +22,8 @@ from interface.position_player_trajectory import build_fixed_chopstick_trajector
 DEFAULT_DATA_DIR = os.path.join(os.path.dirname(__file__), 'data')
 DEFAULT_DATA_FILE = ''
 DEFAULT_PLAY_RATE_HZ = 10.0
+DEFAULT_PLAYBACK_SPEED_SCALE = 1.0
+DEFAULT_INTERPOLATION_FACTOR = 1
 DEFAULT_START_INDEX = 0
 DEFAULT_END_INDEX = -1
 DEFAULT_LOOP = False
@@ -74,6 +76,8 @@ class PositionPlayer(Node):
         self.declare_parameter('data_file', DEFAULT_DATA_FILE)
         self.declare_parameter('data_dir', DEFAULT_DATA_DIR)
         self.declare_parameter('play_rate_hz', DEFAULT_PLAY_RATE_HZ)
+        self.declare_parameter('playback_speed_scale', DEFAULT_PLAYBACK_SPEED_SCALE)
+        self.declare_parameter('interpolation_factor', DEFAULT_INTERPOLATION_FACTOR)
         self.declare_parameter('start_index', DEFAULT_START_INDEX)
         self.declare_parameter('end_index', DEFAULT_END_INDEX)
         self.declare_parameter('loop', DEFAULT_LOOP)
@@ -102,6 +106,8 @@ class PositionPlayer(Node):
         self.data_file = self.get_parameter('data_file').value
         self.data_dir = self.get_parameter('data_dir').value
         self.play_rate_hz = float(self.get_parameter('play_rate_hz').value)
+        self.playback_speed_scale = float(self.get_parameter('playback_speed_scale').value)
+        self.interpolation_factor = int(self.get_parameter('interpolation_factor').value)
         self.start_index = int(self.get_parameter('start_index').value)
         self.end_index = int(self.get_parameter('end_index').value)
         self.loop = bool(self.get_parameter('loop').value)
@@ -129,6 +135,14 @@ class PositionPlayer(Node):
 
         if self.play_rate_hz <= 0.0:
             raise ValueError(f'play_rate_hz must be positive, got {self.play_rate_hz}')
+        if self.playback_speed_scale <= 0.0:
+            raise ValueError(
+                f'playback_speed_scale must be positive, got {self.playback_speed_scale}'
+            )
+        if self.interpolation_factor <= 0:
+            raise ValueError(
+                f'interpolation_factor must be a positive integer, got {self.interpolation_factor}'
+            )
         if self.initial_move_rate_hz <= 0.0:
             raise ValueError(f'initial_move_rate_hz must be positive, got {self.initial_move_rate_hz}')
         if self.initial_hold_sec < 0.0:
@@ -139,6 +153,9 @@ class PositionPlayer(Node):
             )
         validate_chopstick_angles(self.chopstick_open_angle_deg, self.chopstick_close_angle_deg)
 
+        self.publish_rate_hz = self.play_rate_hz * self.playback_speed_scale
+        self.command_point_rate_hz = self.publish_rate_hz * self.interpolation_factor
+        self.seconds_per_command_point = 1.0 / self.command_point_rate_hz
         self.trajectory = self.prepare_trajectory_for_playback()
         self.current_index = 0
         self.latest_joint_sample = None
@@ -168,7 +185,7 @@ class PositionPlayer(Node):
         if self.requires_startup_motion():
             self.playback_state = 'waiting_for_initial_state'
 
-        self.timer = self.create_timer(1.0 / self.play_rate_hz, self.publish_next_sample)
+        self.timer = self.create_timer(1.0 / self.publish_rate_hz, self.publish_next_sample)
         self.current_limit_timer = None
         if self.enable_hand_current_limit:
             self.current_limit_timer = self.create_timer(
@@ -178,7 +195,11 @@ class PositionPlayer(Node):
 
         self.get_logger().info(
             f'Loaded {self.trajectory.shape[0]} samples from {self.data_file}; '
-            f'playing at {self.play_rate_hz:.2f} Hz.'
+            f'playing at source {self.play_rate_hz:.2f} Hz, '
+            f'speed scale {self.playback_speed_scale:.2f}x, '
+            f'interpolation {self.interpolation_factor}x, '
+            f'publish rate {self.publish_rate_hz:.2f} Hz, '
+            f'effective command point rate {self.command_point_rate_hz:.2f} Hz.'
         )
         if self.playback_mode == PLAYBACK_MODE_FIXED:
             self.get_logger().info(
@@ -239,7 +260,30 @@ class PositionPlayer(Node):
         trajectory = self.select_source_trajectory()
         if self.should_apply_hand_position_bias():
             trajectory = self.apply_hand_position_bias(trajectory)
+        trajectory = self.interpolate_trajectory(trajectory)
         return self.map_real_hand_to_controller_order(trajectory)
+
+    def interpolate_trajectory(self, trajectory):
+        interpolation_factor = getattr(self, 'interpolation_factor', DEFAULT_INTERPOLATION_FACTOR)
+        trajectory = np.asarray(trajectory, dtype=np.float64)
+        if interpolation_factor <= 1 or trajectory.shape[0] <= 1:
+            return trajectory.copy()
+
+        point_count = (trajectory.shape[0] - 1) * interpolation_factor + 1
+        interpolated_trajectory = np.empty(
+            (point_count, trajectory.shape[1]),
+            dtype=np.float64,
+        )
+        alpha = self.smooth_alpha(interpolation_factor + 1)[:-1]
+
+        write_index = 0
+        for start_sample, end_sample in zip(trajectory[:-1], trajectory[1:]):
+            segment = start_sample + (end_sample - start_sample) * alpha[:, np.newaxis]
+            interpolated_trajectory[write_index:write_index + interpolation_factor] = segment
+            write_index += interpolation_factor
+
+        interpolated_trajectory[write_index] = trajectory[-1]
+        return interpolated_trajectory
 
     def should_apply_hand_position_bias(self):
         playback_mode = getattr(self, 'playback_mode', PLAYBACK_MODE_RECORDED)
@@ -485,8 +529,17 @@ class PositionPlayer(Node):
     def apply_current_limit_locks(self, sample):
         limited_sample = np.asarray(sample, dtype=np.float64).copy()
         locked_mask = np.isfinite(self.locked_joint_positions)
-        limited_sample[locked_mask] = self.locked_joint_positions[locked_mask]
-        return limited_sample
+        if limited_sample.ndim == 1:
+            limited_sample[locked_mask] = self.locked_joint_positions[locked_mask]
+            return limited_sample
+        if limited_sample.ndim == 2:
+            limited_sample[:, locked_mask] = self.locked_joint_positions[locked_mask]
+            return limited_sample
+        raise ValueError(f'Unsupported sample shape for current-limit locks: {limited_sample.shape}')
+
+    def build_command_chunk(self):
+        chunk_end = min(self.current_index + self.interpolation_factor, self.trajectory.shape[0])
+        return np.asarray(self.trajectory[self.current_index:chunk_end], dtype=np.float64).copy(), chunk_end
 
     def publish_current_limit_override(self):
         if self.last_published_sample is None:
@@ -686,20 +739,19 @@ class PositionPlayer(Node):
             self.handle_finished_trajectory()
             return
 
-        sample = np.asarray(self.trajectory[self.current_index], dtype=np.float64).copy()
-        self.update_current_limited_joints(fallback_sample=sample)
-        sample = self.apply_current_limit_locks(sample)
-        hand_pose = np.reshape(sample[:16], (1, 16))
-        speed = 1.0 / self.play_rate_hz
+        hand_pose, chunk_end = self.build_command_chunk()
+        if self.last_published_sample is not None:
+            self.update_current_limited_joints(fallback_sample=hand_pose[-1])
+            hand_pose = self.apply_current_limit_locks(hand_pose)
 
-        hand_ok = self.hand_controller.command_joint_position(hand_pose, speed)
+        hand_ok = self.hand_controller.command_joint_position(hand_pose[:, :16], self.seconds_per_command_point)
         if not hand_ok:
             self.get_logger().error(f'Failed to publish sample index {self.current_index}')
             rclpy.shutdown()
             return
 
-        self.last_published_sample = sample.copy()
-        self.current_index += 1
+        self.last_published_sample = hand_pose[-1].copy()
+        self.current_index = chunk_end
         if self.current_index >= self.trajectory.shape[0]:
             self.handle_finished_trajectory()
 

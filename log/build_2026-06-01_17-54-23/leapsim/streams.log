@@ -1,0 +1,81 @@
+[1.894s] Invoking command in '/home/lmz/armpiper/build/leapsim': PYTHONPATH=/home/lmz/armpiper/build/leapsim/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/home/lmz/armpiper/install/leapsim/lib/python3.10/site-packages:${PYTHONPATH} /usr/bin/python3 -W ignore:setup.py install is deprecated -W ignore:easy_install command is deprecated setup.py develop --editable --build-directory /home/lmz/armpiper/build/leapsim/build --no-deps symlink_data
+[2.296s] running develop
+[2.658s] running egg_info
+[2.659s] creating leapsim.egg-info
+[2.659s] writing leapsim.egg-info/PKG-INFO
+[2.659s] writing dependency_links to leapsim.egg-info/dependency_links.txt
+[2.663s] writing entry points to leapsim.egg-info/entry_points.txt
+[2.670s] writing requirements to leapsim.egg-info/requires.txt
+[2.670s] writing top-level names to leapsim.egg-info/top_level.txt
+[2.670s] writing manifest file 'leapsim.egg-info/SOURCES.txt'
+[2.671s] reading manifest file 'leapsim.egg-info/SOURCES.txt'
+[2.671s] writing manifest file 'leapsim.egg-info/SOURCES.txt'
+[2.676s] running build_ext
+[2.676s] Creating /home/lmz/armpiper/install/leapsim/lib/python3.10/site-packages/leapsim.egg-link (link to .)
+[2.677s] Installing game script to /home/lmz/armpiper/install/leapsim/lib/leapsim
+[2.684s] Installing hello script to /home/lmz/armpiper/install/leapsim/lib/leapsim
+[2.684s] Installing inference script to /home/lmz/armpiper/install/leapsim/lib/leapsim
+[2.684s] Installing rot script to /home/lmz/armpiper/install/leapsim/lib/leapsim
+[2.684s] Installing zero script to /home/lmz/armpiper/install/leapsim/lib/leapsim
+[2.684s] 
+[2.684s] Installed /home/lmz/armpiper/build/leapsim
+[2.684s] running symlink_data
+[2.684s] creating /home/lmz/armpiper/install/leapsim/share/ament_index
+[2.684s] creating /home/lmz/armpiper/install/leapsim/share/ament_index/resource_index
+[2.685s] creating /home/lmz/armpiper/install/leapsim/share/ament_index/resource_index/packages
+[2.685s] symbolically linking /home/lmz/armpiper/build/leapsim/resource/leapsim -> /home/lmz/armpiper/install/leapsim/share/ament_index/resource_index/packages
+[2.685s] symbolically linking /home/lmz/armpiper/build/leapsim/package.xml -> /home/lmz/armpiper/install/leapsim/share/leapsim
+[2.685s] creating /home/lmz/armpiper/install/leapsim/share/leapsim/cache
+[2.685s] symbolically linking /home/lmz/armpiper/build/leapsim/leapsim/cache/hello.npy -> /home/lmz/armpiper/install/leapsim/share/leapsim/cache
+[2.686s] symbolically linking /home/lmz/armpiper/build/leapsim/leapsim/cache/leap_hand_in_palm_cube_grasp_50k_s105.npy -> /home/lmz/armpiper/install/leapsim/share/leapsim/cache
+[2.686s] symbolically linking /home/lmz/armpiper/build/leapsim/leapsim/cache/specific_array.npy -> /home/lmz/armpiper/install/leapsim/share/leapsim/cache
+[2.690s] symbolically linking /home/lmz/armpiper/build/leapsim/leapsim/cache/LeapHand.pth -> /home/lmz/armpiper/install/leapsim/share/leapsim/cache
+[2.690s] symbolically linking /home/lmz/armpiper/build/leapsim/leapsim/cache/hand_model_trajectory_5_0.npy -> /home/lmz/armpiper/install/leapsim/share/leapsim/cache
+[2.690s] symbolically linking /home/lmz/armpiper/build/leapsim/leapsim/cache/hand17.npy -> /home/lmz/armpiper/install/leapsim/share/leapsim/cache
+[2.691s] symbolically linking /home/lmz/armpiper/build/leapsim/leapsim/cache/datainsert.py -> /home/lmz/armpiper/install/leapsim/share/leapsim/cache
+[2.691s] symbolically linking /home/lmz/armpiper/build/leapsim/leapsim/cache/random_joint_values.py -> /home/lmz/armpiper/install/leapsim/share/leapsim/cache
+[2.691s] symbolically linking /home/lmz/armpiper/build/leapsim/leapsim/cache/hand17_modified.npy -> /home/lmz/armpiper/install/leapsim/share/leapsim/cache
+[2.691s] symbolically linking /home/lmz/armpiper/build/leapsim/leapsim/cache/qi.npy -> /home/lmz/armpiper/install/leapsim/share/leapsim/cache
+[2.691s] symbolically linking /home/lmz/armpiper/build/leapsim/leapsim/cache/hand_model_trajectory_0.npy -> /home/lmz/armpiper/install/leapsim/share/leapsim/cache
+[2.691s] symbolically linking /home/lmz/armpiper/build/leapsim/leapsim/cache/hand_model_trajectory_10_0.npy -> /home/lmz/armpiper/install/leapsim/share/leapsim/cache
+[2.691s] symbolically linking /home/lmz/armpiper/build/leapsim/leapsim/cache/leap_hand_in_palm_cube_grasp_50k_s095.npy -> /home/lmz/armpiper/install/leapsim/share/leapsim/cache
+[2.691s] symbolically linking /home/lmz/armpiper/build/leapsim/leapsim/cache/hand16.npy -> /home/lmz/armpiper/install/leapsim/share/leapsim/cache
+[2.691s] symbolically linking /home/lmz/armpiper/build/leapsim/leapsim/cache/woven_model_trajectory_2.npy -> /home/lmz/armpiper/install/leapsim/share/leapsim/cache
+[2.691s] symbolically linking /home/lmz/armpiper/build/leapsim/leapsim/cache/my_initial_pose_trajectory.npy -> /home/lmz/armpiper/install/leapsim/share/leapsim/cache
+[2.691s] symbolically linking /home/lmz/armpiper/build/leapsim/leapsim/cache/woven_model_trajectory_5.npy -> /home/lmz/armpiper/install/leapsim/share/leapsim/cache
+[2.691s] symbolically linking /home/lmz/armpiper/build/leapsim/leapsim/cache/arm_model_trajectory_2.npy -> /home/lmz/armpiper/install/leapsim/share/leapsim/cache
+[2.692s] symbolically linking /home/lmz/armpiper/build/leapsim/leapsim/cache/hand_model_trajectory_2.npy -> /home/lmz/armpiper/install/leapsim/share/leapsim/cache
+[2.692s] symbolically linking /home/lmz/armpiper/build/leapsim/leapsim/cache/hand_model_trajectory_20_0.npy -> /home/lmz/armpiper/install/leapsim/share/leapsim/cache
+[2.692s] symbolically linking /home/lmz/armpiper/build/leapsim/leapsim/cache/hello16.npy -> /home/lmz/armpiper/install/leapsim/share/leapsim/cache
+[2.692s] symbolically linking /home/lmz/armpiper/build/leapsim/leapsim/cache/leap_hand_in_palm_cube_grasp_50k_s09.npy -> /home/lmz/armpiper/install/leapsim/share/leapsim/cache
+[2.692s] symbolically linking /home/lmz/armpiper/build/leapsim/leapsim/cache/leap_hand_in_palm_cube_grasp_50k_s10.npy -> /home/lmz/armpiper/install/leapsim/share/leapsim/cache
+[2.692s] symbolically linking /home/lmz/armpiper/build/leapsim/leapsim/cache/ping.npy -> /home/lmz/armpiper/install/leapsim/share/leapsim/cache
+[2.692s] symbolically linking /home/lmz/armpiper/build/leapsim/leapsim/cache/data.py -> /home/lmz/armpiper/install/leapsim/share/leapsim/cache
+[2.693s] symbolically linking /home/lmz/armpiper/build/leapsim/leapsim/cache/LeapHand_name.pth -> /home/lmz/armpiper/install/leapsim/share/leapsim/cache
+[2.693s] symbolically linking /home/lmz/armpiper/build/leapsim/leapsim/cache/grend.py -> /home/lmz/armpiper/install/leapsim/share/leapsim/cache
+[2.693s] symbolically linking /home/lmz/armpiper/build/leapsim/leapsim/cache/hand_model_trajectory_1.npy -> /home/lmz/armpiper/install/leapsim/share/leapsim/cache
+[2.693s] symbolically linking /home/lmz/armpiper/build/leapsim/leapsim/cache/hand_model_trajectory_2_0.npy -> /home/lmz/armpiper/install/leapsim/share/leapsim/cache
+[2.693s] symbolically linking /home/lmz/armpiper/build/leapsim/leapsim/cache/hand_model_trajectory_3.npy -> /home/lmz/armpiper/install/leapsim/share/leapsim/cache
+[2.693s] symbolically linking /home/lmz/armpiper/build/leapsim/leapsim/cache/test.py -> /home/lmz/armpiper/install/leapsim/share/leapsim/cache
+[2.693s] symbolically linking /home/lmz/armpiper/build/leapsim/leapsim/cache/woven_model_trajectory_1.npy -> /home/lmz/armpiper/install/leapsim/share/leapsim/cache
+[2.693s] symbolically linking /home/lmz/armpiper/build/leapsim/leapsim/cache/game.npy -> /home/lmz/armpiper/install/leapsim/share/leapsim/cache
+[2.694s] symbolically linking /home/lmz/armpiper/build/leapsim/leapsim/cache/game16.npy -> /home/lmz/armpiper/install/leapsim/share/leapsim/cache
+[2.694s] symbolically linking /home/lmz/armpiper/build/leapsim/leapsim/cache/old.pth -> /home/lmz/armpiper/install/leapsim/share/leapsim/cache
+[2.694s] symbolically linking /home/lmz/armpiper/build/leapsim/leapsim/cache/hand16_model_trajectory_2.npy -> /home/lmz/armpiper/install/leapsim/share/leapsim/cache
+[2.694s] symbolically linking /home/lmz/armpiper/build/leapsim/leapsim/cache/expanded_array.npy -> /home/lmz/armpiper/install/leapsim/share/leapsim/cache
+[2.694s] symbolically linking /home/lmz/armpiper/build/leapsim/leapsim/cache/16.pth -> /home/lmz/armpiper/install/leapsim/share/leapsim/cache
+[2.694s] symbolically linking /home/lmz/armpiper/build/leapsim/leapsim/cache/hand16弃用.npy -> /home/lmz/armpiper/install/leapsim/share/leapsim/cache
+[2.694s] symbolically linking /home/lmz/armpiper/build/leapsim/leapsim/cache/leap_hand_in_palm_cube_grasp_50k_s11.npy -> /home/lmz/armpiper/install/leapsim/share/leapsim/cache
+[2.697s] symbolically linking /home/lmz/armpiper/build/leapsim/leapsim/cache/expanded20.npy -> /home/lmz/armpiper/install/leapsim/share/leapsim/cache
+[2.698s] symbolically linking /home/lmz/armpiper/build/leapsim/leapsim/cache/expanded21.npy -> /home/lmz/armpiper/install/leapsim/share/leapsim/cache
+[2.698s] creating /home/lmz/armpiper/install/leapsim/share/leapsim/cfg
+[2.698s] symbolically linking /home/lmz/armpiper/build/leapsim/leapsim/cfg/config.yaml -> /home/lmz/armpiper/install/leapsim/share/leapsim/cfg
+[2.698s] creating /home/lmz/armpiper/install/leapsim/share/leapsim/cfg/task
+[2.698s] symbolically linking /home/lmz/armpiper/build/leapsim/leapsim/cfg/task/LeapHandGrasp.yaml -> /home/lmz/armpiper/install/leapsim/share/leapsim/cfg/task
+[2.698s] symbolically linking /home/lmz/armpiper/build/leapsim/leapsim/cfg/task/LeapHandRot.yaml -> /home/lmz/armpiper/install/leapsim/share/leapsim/cfg/task
+[2.698s] symbolically linking /home/lmz/armpiper/build/leapsim/leapsim/cfg/task/LeapHandCatch.yaml -> /home/lmz/armpiper/install/leapsim/share/leapsim/cfg/task
+[2.698s] creating /home/lmz/armpiper/install/leapsim/share/leapsim/cfg/train
+[2.698s] symbolically linking /home/lmz/armpiper/build/leapsim/leapsim/cfg/train/LeapHandCatchPPO.yaml -> /home/lmz/armpiper/install/leapsim/share/leapsim/cfg/train
+[2.698s] symbolically linking /home/lmz/armpiper/build/leapsim/leapsim/cfg/train/LeapHandRotPPO.yaml -> /home/lmz/armpiper/install/leapsim/share/leapsim/cfg/train
+[2.698s] symbolically linking /home/lmz/armpiper/build/leapsim/leapsim/cfg/train/LeapHandGraspPPO.yaml -> /home/lmz/armpiper/install/leapsim/share/leapsim/cfg/train
+[2.828s] Invoked command in '/home/lmz/armpiper/build/leapsim' returned '0': PYTHONPATH=/home/lmz/armpiper/build/leapsim/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/home/lmz/armpiper/install/leapsim/lib/python3.10/site-packages:${PYTHONPATH} /usr/bin/python3 -W ignore:setup.py install is deprecated -W ignore:easy_install command is deprecated setup.py develop --editable --build-directory /home/lmz/armpiper/build/leapsim/build --no-deps symlink_data

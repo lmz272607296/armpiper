@@ -189,6 +189,54 @@ class PositionPlayerModeTests(unittest.TestCase):
         expected[5] = -3.0
         np.testing.assert_allclose(limited, expected)
 
+    def test_apply_current_limit_locks_supports_trajectory_matrix(self):
+        module = load_position_player_module()
+        player = module.PositionPlayer.__new__(module.PositionPlayer)
+        player.locked_joint_positions = np.full(16, np.nan, dtype=np.float64)
+        player.locked_joint_positions[1] = 7.5
+        player.locked_joint_positions[3] = -2.0
+        trajectory = np.arange(32, dtype=np.float64).reshape(2, 16)
+
+        limited = module.PositionPlayer.apply_current_limit_locks(player, trajectory)
+
+        expected = trajectory.copy()
+        expected[:, 1] = 7.5
+        expected[:, 3] = -2.0
+        np.testing.assert_allclose(limited, expected)
+
+    def test_publish_next_sample_sends_interpolated_chunk(self):
+        module = load_position_player_module()
+        player = module.PositionPlayer.__new__(module.PositionPlayer)
+        player.playback_state = 'playing'
+        player.current_index = 0
+        player.interpolation_factor = 2
+        player.seconds_per_command_point = 0.04
+        player.trajectory = np.arange(48, dtype=np.float64).reshape(3, 16)
+        player.last_published_sample = None
+        player.get_logger = lambda: DummyLogger()
+        player.handle_finished_trajectory = lambda: None
+        player.update_current_limited_joints = lambda fallback_sample=None: (_ for _ in ()).throw(
+            AssertionError('Current-limit prelock should not run before the first command is published.')
+        )
+
+        recorded_calls = []
+
+        class DummyHandController:
+            def command_joint_position(self, desired_pose, speed):
+                recorded_calls.append((np.asarray(desired_pose, dtype=np.float64), float(speed)))
+                return True
+
+        player.hand_controller = DummyHandController()
+
+        module.PositionPlayer.publish_next_sample(player)
+
+        self.assertEqual(len(recorded_calls), 1)
+        sent_pose, sent_speed = recorded_calls[0]
+        np.testing.assert_allclose(sent_pose, player.trajectory[:2])
+        self.assertAlmostEqual(sent_speed, 0.04)
+        self.assertEqual(player.current_index, 2)
+        np.testing.assert_allclose(player.last_published_sample, player.trajectory[1])
+
     def test_parse_hand_position_bias_converts_degrees_to_radians(self):
         module = load_position_player_module()
         player = module.PositionPlayer.__new__(module.PositionPlayer)

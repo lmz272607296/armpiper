@@ -7,6 +7,7 @@ action8_rst = interface.action8_rst:main
 camera_base_transform_node = interface.camera_base_transform_node:main
 chessboard_hand_eye_calibration_node = interface.chessboard_hand_eye_calibration_node:main
 eye_in_hand_calibration_node = interface.eye_in_hand_calibration_node:main
+hand_inference_controller = interface.run_inference:main_ros
 master_node = interface.master_node:main
 piper_keyboard_joint_jog = interface.piper_keyboard_joint_jog:main
 position_player = interface.position_player:main
